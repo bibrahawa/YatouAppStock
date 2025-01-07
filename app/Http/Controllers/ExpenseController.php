@@ -3,9 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
-use App\Http\Requests;
-use App\Http\Controllers\Controller;
 use App\Models\Expense;
 use App\Models\CashRegister;
 use Carbon\Carbon;
@@ -14,6 +11,7 @@ use App\Models\ExpenseCategory;
 class ExpenseController extends Controller
 {
     private $searchParams = ['expense_category', 'from', 'to'];
+
     /**
      * Display a listing of the resource.
      *
@@ -22,30 +20,30 @@ class ExpenseController extends Controller
     public function getIndex(Request $request)
     {
         $expenses = Expense::orderBy('created_at', 'desc');
-        if($request->get('expense_category')) {
+        if ($request->get('expense_category')) {
             $expenses->where('expense_category_id', $request->get('expense_category'));
         }
 
         $from = $request->get('from');
-        $to = $request->get('to')?:date('Y-m-d');
-        $to = Carbon::createFromFormat('Y-m-d',$to);
-        $to = filterTo($to);
+        $to = $request->get('to') ?: date('Y-m-d');
+        $to = Carbon::createFromFormat('Y-m-d', $to);
+        $to = $this->filterTo($to);
 
-        if($request->get('from') || $request->get('to')) {
-            if(!is_null($from)){
-                $from = Carbon::createFromFormat('Y-m-d',$from);
-                $from = filterFrom($from);
-                $expenses->whereBetween('created_at',[$from,$to]);
-            }else{
-                $expenses->where('created_at','<=',$to);
+        if ($request->get('from') || $request->get('to')) {
+            if (!is_null($from)) {
+                $from = Carbon::createFromFormat('Y-m-d', $from);
+                $from = $this->filterFrom($from);
+                $expenses->whereBetween('created_at', [$from, $to]);
+            } else {
+                $expenses->where('created_at', '<=', $to);
             }
         }
 
         $totalexpenses = $expenses->sum('amount');
 
-        if($request->get('from') || $request->get('to') || $request->get('expense_category')){
+        if ($request->get('from') || $request->get('to') || $request->get('expense_category')) {
             $expenses = $expenses->paginate(100);
-        }else{
+        } else {
             $expenses = $expenses->paginate(25);
         }
 
@@ -58,9 +56,10 @@ class ExpenseController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function postSearch(Request $request) {
+    public function postSearch(Request $request)
+    {
         $params = array_filter($request->only($this->searchParams));
-        return redirect()->action('ExpenseController@getIndex', $params);
+        return redirect()->action([ExpenseController::class, 'getIndex'], $params);
     }
 
     /**
@@ -71,22 +70,22 @@ class ExpenseController extends Controller
      */
     public function postIndex(Request $request)
     {
-        $this->validate($request, [
+
+        $request->validate([
             'purpose' => 'required',
             'amount' => 'required|numeric',
             'expense_category_id' => 'required'
         ]);
 
         $expense = new Expense;
-            $expense->purpose = $request->get('purpose');
-            $expense->expense_category_id = $request->get('expense_category_id');
-            $expense->amount = $request->get('amount');
-            $expense->created_at = Carbon::parse($request->get('date'));
+        $expense->purpose = $request->get('purpose');
+        $expense->expense_category_id = $request->get('expense_category_id');
+        $expense->amount = $request->get('amount');
+        $expense->created_at = Carbon::parse($request->get('date'));
         $expense->save();
 
         $message = trans('core.saved');
         return redirect()->back()->withSuccess($message);
-
     }
 
     /**
@@ -98,12 +97,11 @@ class ExpenseController extends Controller
     public function cashRegister(Request $request)
     {
         $cash_register = new CashRegister;
-            $cash_register->cash_in_hands = $request->get('cash_in_hands');
-            $cash_register->date = Carbon::now()->format('Y-m-d');
+        $cash_register->cash_in_hands = $request->get('cash_in_hands');
+        $cash_register->date = Carbon::now()->format('Y-m-d');
         $cash_register->save();
 
         return redirect()->back();
-
     }
 
     /**
@@ -111,21 +109,21 @@ class ExpenseController extends Controller
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response
-    */
+     */
     public function editExpense(Request $request)
     {
-        $this->validate($request, [
+        $request->validate([
             'purpose' => 'required',
             'amount' => 'required|numeric',
         ]);
 
         $expense = Expense::find($request->get('id'));
-            $expense->purpose = $request->get('purpose');
-            $expense->amount = $request->get('amount');
-            $expense->expense_category_id = $request->get('expense_category_id');
-            if($request->get('date')){
-                $expense->created_at = Carbon::parse($request->get('date'));
-            }
+        $expense->purpose = $request->get('purpose');
+        $expense->amount = $request->get('amount');
+        $expense->expense_category_id = $request->get('expense_category_id');
+        if ($request->get('date')) {
+            $expense->created_at = Carbon::parse($request->get('date'));
+        }
         $expense->save();
 
         $message = trans('core.changes_saved');
@@ -143,5 +141,17 @@ class ExpenseController extends Controller
         $expense = Expense::find($request->get('id'));
         $expense->delete();
         return redirect()->route('expense.index');
+    }
+
+    private function filterTo($to)
+    {
+        // Implement your filterTo logic here
+        return $to;
+    }
+
+    private function filterFrom($from)
+    {
+        // Implement your filterFrom logic here
+        return $from;
     }
 }

@@ -3,15 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
-use App\Http\Requests;
-use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\Permission;
-use App\Models\RolePermission;
 use Illuminate\Support\Facades\Auth;
-
-
 
 class RolePermissionController extends Controller
 {
@@ -43,8 +37,13 @@ class RolePermissionController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function postRole(Role $role, Request $request)
+    public function postRole(Request $request)
     {
+        $request->validate([
+            'role_name' => 'required|string|max:255',
+        ]);
+
+        $role = new Role;
         $role->name = $request->get('role_name');
         $role->save();
 
@@ -55,41 +54,41 @@ class RolePermissionController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param  Role  $role
      * @return \Illuminate\Http\Response
      */
-    public function setRolePermissions(Role $role){
-
+    public function setRolePermissions(Role $role)
+    {
         $permissions = Permission::all();
         $rolePermissionNameLists = [];
 
-        if($role->permissions->count() != 0){
-            $rolePermissions =  $role->permissions;
-            foreach($rolePermissions as $rolePermission){
-                $rolePermissionNameLists[] =  ucwords($rolePermission->type).' '.ucwords($rolePermission->name);
+        if ($role->permissions->count() != 0) {
+            $rolePermissions = $role->permissions;
+            foreach ($rolePermissions as $rolePermission) {
+                $rolePermissionNameLists[] = ucwords($rolePermission->type) . ' ' . ucwords($rolePermission->name);
             }
         }
-       return view('acl.role-permissions.form', compact('role', 'permissions', 'rolePermissionNameLists'));
+        return view('acl.role-permissions.form', compact('role', 'permissions', 'rolePermissionNameLists'));
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function postRolePermissions(Request $request)
     {
-        $role = Role::find($request->get('role_id'));
+        $request->validate([
+            'role_id' => 'required|exists:roles,id',
+            'permissions' => 'array',
+            'permissions.*' => 'exists:permissions,id',
+        ]);
 
-        $permissions = Permission::all();
-        $newPermissions = [];
-        foreach ($permissions as $permission) {
-            if(!empty($request->get('permissions'.$permission->id))){
-                $newPermissions[] = $permission->id;
-            }
-            $role->permissions()->sync($newPermissions);
-        }
+        $role = Role::findOrFail($request->get('role_id'));
+
+        $newPermissions = $request->get('permissions', []);
+        $role->permissions()->sync($newPermissions);
 
         $message = trans('core.changes_saved');
         return redirect()->route('role.index')->withSuccess($message);

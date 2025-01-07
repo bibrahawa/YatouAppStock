@@ -1,74 +1,79 @@
 @extends('app')
 
 @section('title')
-	@if($warehouse->id)
-		{{trans('core.editing')}} {{$warehouse->name}}
-	@else
-		{{trans('core.add_new_warehouse')}}
-	@endif
+    @if($warehouse->id)
+        {{ trans('core.editing') }} {{ $warehouse->name }}
+    @else
+        {{ trans('core.add_new_warehouse') }}
+    @endif
 @stop
 
 @section('contentheader')
 @stop
 
 @section('main-content')
-	<div class="panel-body">
+    <div class="panel-body">
 
-	    <h3 class="title-hero">
-			@if($warehouse->id)
-				{{trans('core.editing')}} {{$warehouse->name}}
-			@else
-				{{trans('core.add_new_warehouse')}}
-			@endif
-	    </h3>
-	    <div class="example-box-wrapper">
-		
-			{!! Form::model($warehouse,['method' => 'post', 'files' => true, 'class' => 'form-horizontal bordered-row', 'id' => 'ism_form']) !!}
+        <h3 class="title-hero">
+            @if($warehouse->id)
+                {{ trans('core.editing') }} {{ $warehouse->name }}
+            @else
+                {{ trans('core.add_new_warehouse') }}
+            @endif
+        </h3>
+        <div class="example-box-wrapper">
 
-				<div class="form-group">
-					<label class="col-sm-3 control-label">{{ trans('core.name') }}</label>
-					<span class="required" style="color: red; font-weight: bolder;">*</span>
-					<div class="col-sm-6">
-						{!! Form::text('name', $warehouse->name, ['class' => 'form-control']) !!}
-					</div>
-				</div>
+            <form method="POST" action="{{ route('warehouse.post', $warehouse) }}" enctype="multipart/form-data" class="form-horizontal bordered-row" id="ism_form">
+                @csrf
+                @if($warehouse->id)
+                    @method('PUT')
+                    <input type="hidden" name="id" value="{{ $warehouse->id }}">
+                @endif
 
-				<div class="form-group">
-					<label class="col-sm-3 control-label">{{ trans('core.address') }}</label>
-					<div class="col-sm-6">
-						{!! Form::text('address', $warehouse->address, ['class' => 'form-control']) !!}
-					</div>
-				</div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{{ trans('core.name') }}</label>
+                    <span class="required" style="color: red; font-weight: bolder;">*</span>
+                    <div class="col-sm-6">
+                        <input type="text" name="name" value="{{ old('name', $warehouse->name) }}" class="form-control">
+                    </div>
+                </div>
 
-				<div class="form-group">
-					<label class="col-sm-3 control-label">{{ trans('core.phone') }}</label>
-					<div class="col-sm-6">
-						{!! Form::text('phone', $warehouse->phone, ['class' => 'form-control']) !!}
-					</div>
-				</div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{{ trans('core.address') }}</label>
+                    <div class="col-sm-6">
+                        <input type="text" name="address" value="{{ old('address', $warehouse->address) }}" class="form-control">
+                    </div>
+                </div>
 
-				<div class="form-group">
-					<label class="col-sm-3 control-label">{{ trans('core.in-charge-name') }}</label>
-					<div class="col-sm-6">
-						{!! Form::text('in_charge_name', $warehouse->in_charge_name, ['class' => 'form-control']) !!}
-					</div>
-				</div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{{ trans('core.phone') }}</label>
+                    <div class="col-sm-6">
+                        <input type="text" name="phone" value="{{ old('phone', $warehouse->phone) }}" class="form-control">
+                    </div>
+                </div>
 
-			    <div class="bg-default content-box text-center pad20A mrg25T">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{{ trans('core.in-charge-name') }}</label>
+                    <div class="col-sm-6">
+                        <input type="text" name="in_charge_name" value="{{ old('in_charge_name', $warehouse->in_charge_name) }}" class="form-control">
+                    </div>
+                </div>
+
+                <div class="bg-default content-box text-center pad20A mrg25T">
                     <input class="btn btn-lg btn-primary" type="submit" id="submitButton" value="{{ trans('core.save') }}" onclick="submitted()">
                 </div>
-			{!! Form::close() !!}
+            </form>
 
-
-		</div>
-	</div>
+        </div>
+    </div>
 
 @stop
 
 @section('js')
-	@parent
-	<script>
-		
-	</script>
-
+    @parent
+    <script>
+        function submitted() {
+            // Add your custom JavaScript here
+        }
+    </script>
 @stop

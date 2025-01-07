@@ -1,43 +1,42 @@
 @extends('app')
 
 @section('title')
-	{{trans('core.sell_list')}}
+    {{trans('core.sell_list')}}
 @stop
 
 @section('contentheader')
-	{{trans('core.sell_list')}}
+    {{trans('core.sell_list')}}
 @stop
 
 @section('breadcrumb')
-	{{trans('core.sell_list')}}
+    {{trans('core.sell_list')}}
 @stop
-
 
 @section('main-content')
     <div class="panel-heading">
         @if(auth()->user()->can('sell.create'))
-            <a 
-                href="{{route('sell.form')}}" 
-                class="btn btn-success btn-alt btn-xs" 
-                style="border-radius: 0px !important;" 
+            <a
+                href="{{route('sell.form')}}"
+                class="btn btn-success btn-alt btn-xs"
+                style="border-radius: 0px !important;"
             >
-                <i class='fa fa-plus'></i> 
+                <i class='fa fa-plus'></i>
                 {{trans('core.add_new_sell')}}
             </a>
         @endif
 
         @if(count(Request::input()))
-            <span class="pull-right">   
-                <a 
-                    class="btn btn-default btn-alt btn-xs" 
-                    href="{{ action('SellController@getIndex') }}"
+            <span class="pull-right">
+                <a
+                    class="btn btn-default btn-alt btn-xs"
+                    href="{{ route('sell.index') }}"
                 >
-                    <i class="fa fa-eraser"></i> 
+                    <i class="fa fa-eraser"></i>
                     {{ trans('core.clear') }}
                 </a>
 
                 <a class="btn btn-primary btn-alt btn-xs" id="searchButton">
-                    <i class="fa fa-search"></i> 
+                    <i class="fa fa-search"></i>
                     {{ trans('core.modify_search') }}
                 </a>
             </span>
@@ -60,7 +59,7 @@
                     </td>
                     <td @if(rtlLocale()) style="text-align: right;" @endif>
                         {{settings('currency_code')}}
-                        {{twoPlaceDecimal($total)}} 
+                        {{twoPlaceDecimal($total)}}
                         <span class="font-size-9">{{trans('core.excluding_vat_and_tax')}}</span>
                     </td>
                 </tr>
@@ -117,11 +116,11 @@
                         {{twoPlaceDecimal($profit)}}
                     </td>
                 </tr>
-            </table> 
+            </table>
         </div>
 
         <div class="table-responsive" style="min-height: 300px;" id="tableDIv">
-        	<table class="table table-bordered table-striped">
+            <table class="table table-bordered table-striped">
                 <thead  class="{{settings('theme')}}">
                     <td class="text-center font-white" width="17%">{{trans('core.date')}}</td>
                     <td class="text-center font-white" width="15%">{{trans('core.invoice_no')}}</td>
@@ -153,15 +152,15 @@
                             </td>
 
                             <td class="text-center">
-                                {{settings('currency_code')}} 
-                                {{twoPlaceDecimal($transaction->net_total)}} 
+                                {{settings('currency_code')}}
+                                {{twoPlaceDecimal($transaction->net_total)}}
                             </td>
 
                             <td class="text-center">
-                                {{settings('currency_code')}} 
-                                {{twoPlaceDecimal($transaction->paid)}} 
+                                {{settings('currency_code')}}
+                                {{twoPlaceDecimal($transaction->paid)}}
                             </td>
-                            
+
                             <td class="text-center">
                                 <div class="btn-group">
                                   <button type="button" class="btn btn-info btn-alt btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -176,11 +175,11 @@
                                     </li>
                                     <li>
                                         <a target="_BLINK" href="{{route('sell.invoice', $transaction)}}">
-                                            <i class="fa fa-file" style="color: #edb426;"></i> 
+                                            <i class="fa fa-file" style="color: #edb426;"></i>
                                             {{trans('core.invoice')}}
-                                        </a> 
+                                        </a>
                                     </li>
-                                    
+
                                     @if(auth()->user()->can('return.create'))
                                         @if(!$transaction->return_invoice)
                                             @if($transaction->return != 1)
@@ -193,7 +192,7 @@
                                             @endif
                                         @endif
                                     @endif
-                                    
+
                                     @if(auth()->user()->can('sell.manage'))
                                     <li>
                                         <a type="button" data-toggle="modal" data-target="#deleteModal{{$transaction->id}}" title="You can delete this sell within two hours after created">
@@ -209,7 +208,9 @@
 
                         <!--Modal for delete sells-->
                         <div class="modal fade" id="deleteModal{{$transaction->id}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-                        {!! Form::open(['route' => ['sell.delete', $transaction], 'method' => 'delete' ]) !!}
+                        <form action="{{ route('sell.delete', $transaction) }}" method="POST">
+                          @csrf
+                          @method('DELETE')
                           <div class="modal-dialog" role="document">
                             <div class="modal-content">
                               <div class="modal-header">
@@ -233,7 +234,7 @@
                                 <br /><br />
 
                                 <div class="alert alert-success alert-red">If you delete this sell, all the transactions of this sale will also be deleted.</div>
-                                
+
                               </div>
                               <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">{{trans('core.close')}}</button>
@@ -241,7 +242,7 @@
                               </div>
                             </div>
                           </div>
-                        {!! Form::close() !!}
+                        </form>
                         </div>
                         <!--Modal Div Ends-->
                     @endforeach
@@ -254,7 +255,7 @@
             </div>
             <!--Ends-->
 
-             
+
         </div>
     </div>
 
@@ -268,19 +269,19 @@
     <div class="modal fade" id="searchModal">
         <div class="modal-dialog">
             <div class="modal-content">
-                {!! Form::open(['class' => 'form-horizontal']) !!}
+                <form class="form-horizontal">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                     <h4 class="modal-title"> {{ trans('core.search').' '.trans('core.sell') }}</h4>
                 </div>
 
-                <div class="modal-body">                  
+                <div class="modal-body">
                     <div class="form-group">
                         <label class="col-sm-3" @if(rtlLocale()) style="text-align: left;" @endif>
                             {{trans('core.invoice_no')}}
                         </label>
                         <div class="col-sm-9">
-                            {!! Form::text('invoice_no', Request::get('invoice_no'), ['class' => 'form-control']) !!}
+                            <input type="text" name="invoice_no" value="{{ Request::get('invoice_no') }}" class="form-control">
                         </div>
                     </div>
 
@@ -289,14 +290,22 @@
                             {{trans('core.customer')}}
                         </label>
                         <div class="col-sm-9">
-                            {!! Form::select('customer', $customers, Request::get('customer'), ['class' => 'form-control selectpicker', 'data-live-search' => 'true', 'placeholder' => 'Please select a customer']) !!}
+                            <select name="customer" class="form-control selectpicker" data-live-search="true">
+                                <option value="">{{ trans('core.please_select') }}</option>
+                                @foreach($customers as $id => $name)
+                                    <option value="{{ $id }}" {{ Request::get('customer') == $id ? 'selected' : '' }}>{{ $name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label class="col-sm-3" @if(!rtlLocale()) style="text-align: left;" @endif>{{trans('core.type')}}</label>
                         <div class="col-sm-9">
-                            {!! Form::select('type', ['0' => 'ALL', 'pos' => 'POS'], Request::get('type'), ['class' => 'form-control selectpicker']) !!}
+                            <select name="type" class="form-control selectpicker">
+                                <option value="0" {{ Request::get('type') == '0' ? 'selected' : '' }}>ALL</option>
+                                <option value="pos" {{ Request::get('type') == 'pos' ? 'selected' : '' }}>POS</option>
+                            </select>
                         </div>
                     </div>
 
@@ -305,7 +314,7 @@
                             {{trans('core.from')}}
                         </label>
                         <div class="col-sm-9">
-                            {!! Form::text('from', Request::get('from'), ['class' => 'form-control dateTime','placeholder'=>"yyyy-mm-dd"]) !!}
+                            <input type="text" name="from" value="{{ Request::get('from') }}" class="form-control dateTime" placeholder="yyyy-mm-dd">
                         </div>
                     </div>
 
@@ -314,17 +323,17 @@
                             {{trans('core.to')}}
                         </label>
                         <div class="col-sm-9">
-                            {!! Form::text('to', Request::get('to'), ['class' => 'form-control dateTime','placeholder'=>"yyyy-mm-dd"]) !!}
+                            <input type="text" name="to" value="{{ Request::get('to') }}" class="form-control dateTime" placeholder="yyyy-mm-dd">
                         </div>
                     </div>
-                                                             
+
                 </div>
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">{{trans('core.close')}}</button>
-                    {!! Form::submit('Search', ['class' => 'btn btn-primary', 'data-disable-with' => trans('core.searching')]) !!}
+                    <button type="submit" class="btn btn-primary" data-disable-with="{{ trans('core.searching') }}">{{ trans('core.search') }}</button>
                 </div>
-                {!! Form::close() !!}
+                </form>
             </div>
         </div>
     </div>

@@ -1,194 +1,145 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use App\Client;
+use App\Models\Client;
 use App\Models\Payment;
-use Carbon\Carbon;
 use App\Models\Transaction;
-use App\Http\Requests;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
-
 class PaymentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     private $searchParams = ['receipt_no', 'invoice_no', 'client', 'type', 'from', 'to', 'method'];
 
     public function getIndex(Request $request)
     {
         $clients = Client::pluck('first_name', 'id');
         $type = ['debit' => 'Debit', 'credit' => 'Credit', 'return' => 'Return'];
-        $methods = ['cash' => 'Cash', 'card' => 'Card', 'cheque' => 'Cheque', 'others' => 'Others', ];
+        $methods = ['cash' => 'Cash', 'card' => 'Card', 'cheque' => 'Cheque', 'others' => 'Others'];
 
         $payments = Payment::orderBy('id', 'desc');
 
-        if($request->get('receipt_no')) {
+        if ($request->filled('receipt_no')) {
             $str = ltrim($request->get('receipt_no'), '0');
             $payments->whereId($str);
         }
 
-        if($request->get('invoice_no')) {
+        if ($request->filled('invoice_no')) {
             $payments->where('reference_no', 'LIKE', '%' . $request->get('invoice_no') . '%');
         }
 
-        if($request->get('client')) {
+        if ($request->filled('client')) {
             $payments->whereClientId($request->get('client'));
         }
 
-        if($request->get('type')) {
+        if ($request->filled('type')) {
             $payments->whereType($request->get('type'));
         }
 
-        if($request->get('method')) {
+        if ($request->filled('method')) {
             $payments->whereMethod($request->get('method'));
         }
 
         $from = $request->get('from');
-        $to = $request->get('to')?:date('Y-m-d');
-        $to = Carbon::createFromFormat('Y-m-d',$to);
-        $to = filterTo($to);
+        $to = $request->get('to') ?: date('Y-m-d');
+        $to = Carbon::createFromFormat('Y-m-d', $to)->endOfDay();
 
-        if($request->get('from') || $request->get('to')) {
-            if(!is_null($from)){
-                $from = Carbon::createFromFormat('Y-m-d',$from);
-                $from = filterFrom($from);
-                $payments->whereBetween('created_at',[$from,$to]);
-            }else{
-                $payments->where('created_at','<=',$to);
+        if ($request->filled('from') || $request->filled('to')) {
+            if (!is_null($from)) {
+                $from = Carbon::createFromFormat('Y-m-d', $from)->startOfDay();
+                $payments->whereBetween('created_at', [$from, $to]);
+            } else {
+                $payments->where('created_at', '<=', $to);
             }
         }
 
-        $cloneForDebit = clone $payments;
-        $cloneForCredit = clone $payments;
-        $cloneForReturn = clone $payments;
+        $total_debit = (clone $payments)->whereType('debit')->sum('amount');
+        $total_credit = (clone $payments)->whereType('credit')->sum('amount');
+        $total_return = (clone $payments)->whereType('return')->sum('amount');
 
-        $total_debit = $cloneForDebit->whereType('debit')->sum('amount');
-        $total_credit = $cloneForCredit->whereType('credit')->sum('amount');
-        $total_return = $cloneForReturn->whereType('return')->sum('amount');
-
-        if($request->get('print')){
+        if ($request->filled('print')) {
             $printable_payments = $payments->get();
-            return view('payments.print-payment-list', compact('printable_payments','total_debit', 'total_credit', 'total_return','from', 'to'));
+            return view('payments.print-payment-list', compact('printable_payments', 'total_debit', 'total_credit', 'total_return', 'from', 'to'));
         }
 
-        return view('payments.list')
-                ->withClients($clients)
-                ->withType($type)
-                ->with('total_debit',$total_debit)
-                ->with('total_credit',$total_credit)
-                ->with('total_return',$total_return)
-                ->with('methods', $methods)
-                ->withPayments($payments->paginate(20));
+        return view('payments.list', [
+            'clients' => $clients,
+            'type' => $type,
+            'total_debit' => $total_debit,
+            'total_credit' => $total_credit,
+            'total_return' => $total_return,
+            'methods' => $methods,
+            'payments' => $payments->paginate(20)
+        ]);
     }
 
-    /**
-     * post of paymentList.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function postIndex(Request $request) {
+    public function postIndex(Request $request)
+    {
         $params = array_filter($request->only($this->searchParams));
-        return redirect()->action('PaymentController@getIndex', $params);
+        return redirect()->action([PaymentController::class, 'getIndex'], $params);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function postPayment(Request $request)
     {
-        if($request->get('invoice_payment') == 1){
-            //direct invoice-wise payment starts
+        $request->validate([
+            'client_id' => 'required|exists:clients,id',
+            'amount' => 'required|numeric',
+            'method' => 'required|string',
+            'type' => 'required|string',
+            'date' => 'required|date',
+            'reference_no' => 'nullable|string',
+            'note' => 'nullable|string',
+        ]);
+
+        if ($request->get('invoice_payment') == 1) {
             $ref_no = $request->get('reference_no');
-            $transaction = Transaction::where('reference_no', $ref_no)->first();
-            $previously_paid = $transaction->paid;
-            $transaction->paid = round(($previously_paid + $request->get('amount')), 2);
+            $transaction = Transaction::where('reference_no', $ref_no)->firstOrFail();
+            $transaction->paid = round($transaction->paid + $request->get('amount'), 2);
             $transaction->save();
 
-            //saving paid amount into payment table
-            $payment = new Payment;
-                $payment->client_id = $request->get('client_id');
-                $payment->amount = round($request->get('amount'),2);
-                $payment->method = $request->get('method');
-                $payment->type = $request->get('type');
-                if($request->get('reference_no')){
-                    $payment->reference_no = $request->get('reference_no');
-                }
-                $payment->note = $request->get('note');
-                $payment->date = Carbon::parse($request->get('date'))->format('Y-m-d H:i:s');
-            $payment->save();
-
-        }else{
-            //client-wise payment starts
+            Payment::create([
+                'client_id' => $request->get('client_id'),
+                'amount' => round($request->get('amount'), 2),
+                'method' => $request->get('method'),
+                'type' => $request->get('type'),
+                'reference_no' => $request->get('reference_no'),
+                'note' => $request->get('note'),
+                'date' => Carbon::parse($request->get('date'))->format('Y-m-d H:i:s'),
+            ]);
+        } else {
             $amount = round($request->get('amount'), 2);
-            $client_id = $request->get('client_id');
-            $client = Client::find($client_id);
+            $client = Client::findOrFail($request->get('client_id'));
 
-            foreach($client->transactions as $transaction){
-                $due = round(($transaction->net_total - $transaction->paid), 2);
-                $previously_paid = $transaction->paid;
-                if($due >= 0 && $amount > 0){
-                    if($amount > $due){
-                        $restAmount = $amount - $due;
-                        $transaction->paid = $due + $previously_paid;
-                        $transaction->save();
+            foreach ($client->transactions as $transaction) {
+                $due = round($transaction->net_total - $transaction->paid, 2);
+                if ($due > 0 && $amount > 0) {
+                    $paymentAmount = min($amount, $due);
+                    $transaction->paid += $paymentAmount;
+                    $transaction->save();
 
-                        //payment
-                        $payment = new Payment;
-                        $payment->client_id = $client_id;
-                        $payment->amount = $due;
-                        $payment->method = $request->get('method');
-                        $payment->type = $request->get('type');
-                        $payment->reference_no = $transaction->reference_no;
+                    Payment::create([
+                        'client_id' => $client->id,
+                        'amount' => $paymentAmount,
+                        'method' => $request->get('method'),
+                        'type' => $request->get('type'),
+                        'reference_no' => $transaction->reference_no,
+                        'note' => $request->get('note'),
+                        'date' => Carbon::parse($request->get('date'))->format('Y-m-d H:i:s'),
+                    ]);
 
-                        $payment->note = $request->get('note');
-                        $payment->date = Carbon::parse($request->get('date'))->format('Y-m-d H:i:s');
-                        $payment->save();
-
-                    }else{
-                        $restAmount = 0;
-                        $transaction->paid = $amount + $previously_paid;
-                        $transaction->save();
-
-                        //payment
-                        $payment = new Payment;
-                        $payment->client_id = $client_id;
-                        $payment->amount = $amount;
-                        $payment->method = $request->get('method');
-                        $payment->type = $request->get('type');
-                        $payment->reference_no = $transaction->reference_no;
-
-                        $payment->note = $request->get('note');
-                        $payment->date = Carbon::parse($request->get('date'))->format('Y-m-d H:i:s');
-                        $payment->save();
-                    }
-
-                    $amount = $restAmount;
+                    $amount -= $paymentAmount;
                 }
-                if($amount <= 0){
+                if ($amount <= 0) {
                     break;
                 }
             }
-            //client-wise payment ends
         }
 
-        $message = trans('core.payment_received');
-        return redirect()->back()->withSuccess($message);
+        return redirect()->back()->withSuccess(trans('core.payment_received'));
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function printReceipt(Payment $payment)
     {
         return view('payments.receipt-print', compact('payment'));

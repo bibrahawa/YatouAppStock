@@ -105,10 +105,8 @@ Route::group(['prefix'=>'admin'], function(){
 
     Route::get('purchase', [PurchaseController::class, 'getIndex'])->name('purchase.index');
     Route::post('purchase', [PurchaseController::class, 'postIndex']);
-
     Route::get('purchase/new', [PurchaseController::class, 'getNewPurchase'])->name('purchase.item');
     Route::post('purchase/new', [PurchaseController::class, 'postPurchase'])->name('purchase.post');
-
     Route::get('purchase/details/{transaction}', [PurchaseController::class, 'purchaseDetails'])->name('purchase.details');
     Route::get('purchase/{transaction}/invoice', [PurchaseController::class, 'purchasingInvoice'])->name('purchase.invoice');
     Route::post('purchase/delete',[PurchaseController::class, 'deletePurchase'])->name('purchase.delete');
@@ -137,10 +135,8 @@ Route::group(['prefix'=>'admin'], function(){
     Route::get('pos/sell/invoice/{id}', [posController::class, 'posInvoice'])->name('pos.invoice');
 
     Route::post('payment', [PaymentController::class, 'postPayment'])->name('payment.post');
-
     Route::get('transaction/all', [PaymentController::class, 'getIndex'])->name('payment.list');
     Route::post('transaction/all', [PaymentController::class, 'postIndex']);
-
     Route::get('print/{payment}/receipt', [PaymentController::class, 'printReceipt'])->name('payment.voucher');
 
     Route::get('client', [ClientController::class, 'getIndex'])->name('client.index');
@@ -176,9 +172,7 @@ Route::group(['prefix'=>'admin'], function(){
 
     Route::get('expense', [ExpenseController::class, 'getIndex'])->name('expense.index');
     Route::post('expense', [ExpenseController::class, 'postIndex'])->name('expense.post');
-
     Route::post('expense/search', [ExpenseController::class, 'postSearch'])->name('expense.search');
-
     Route::post('expense/edit', [ExpenseController::class, 'editExpense'])->name('expense.edit');
     Route::post('expense/delete', [ExpenseController::class, 'deleteExpense'])->name('expense.delete');
 
@@ -208,7 +202,6 @@ Route::group(['prefix'=>'admin'], function(){
 
     Route::get('role', [RolePermissionController::class, 'getIndex'])->name('role.index');
     Route::post('role', [RolePermissionController::class, 'postRole'])->name('role.post');
-
     Route::get('role/{role}/permission', [RolePermissionController::class, 'setRolePermissions'])->name('role.permission');
     Route::post('role/{role}/permission', [RolePermissionController::class, 'postRolePermissions'])->name('post.role.permission');
 
@@ -217,15 +210,12 @@ Route::group(['prefix'=>'admin'], function(){
     Route::post('vat/delete',[TaxController::class, 'deleteTax'])->name('tax.delete');
     Route::post('vat/edit', [TaxController::class, 'editTax'])->name('tax.edit');
 
-    Route::get('warehouse', [WarehouseController::class, 'getIndex'])->name('warehouse.index');
-
-    Route::get('warehouse/new', [WarehouseController::class, 'getNewWarehouse'])->name('warehouse.new');
-    Route::post('warehouse/new', [WarehouseController::class, 'postWarehouse'])->name('warehouse.post');
-
-    Route::get('warehouse/{warehouse}', [WarehouseController::class, 'getWarehouse'])->name('warehouse.show');
-
-    Route::post('warehouse/{warehouse}', [WarehouseController::class, 'postWarehouse'])->name('warehouse.post');
-	Route::delete('warehouse/delete/{warehouse}', [WarehouseController::class, 'deleteWarehouse'])->name('warehouse.delete');
+    Route::get('warehouse', [WarehouseController::class, 'index'])->name('warehouse.index');
+    Route::get('warehouse/new', [WarehouseController::class, 'create'])->name('warehouse.new');
+    Route::post('warehouse/new/{warehouse}', [WarehouseController::class, 'store'])->name('warehouse.post');
+    Route::get('warehouse/{warehouse}', [WarehouseController::class, 'edit'])->name('warehouse.edit');
+    Route::put('warehouse/{warehouse}', [WarehouseController::class, 'store'])->name('warehouse.post');
+	Route::delete('warehouse/delete/{warehouse}', [WarehouseController::class, 'destroy'])->name('warehouse.delete');
 
 
 	// Products by purchase ID

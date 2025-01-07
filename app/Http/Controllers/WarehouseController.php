@@ -1,10 +1,8 @@
 <?php
 namespace App\Http\Controllers;
 
-use Input;
 use App\Models\User;
 use App\Models\Warehouse;
-use App\Http\Requests;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -16,10 +14,10 @@ class WarehouseController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function getIndex(Request $request)
+    public function index(Request $request)
     {
-        $warehouses = Warehouse::orderBy('name', 'asc');
-        return view('warehouses.index')->withWarehouses($warehouses->paginate(20));
+        $warehouses = Warehouse::orderBy('name', 'asc')->paginate(20);
+        return view('warehouses.index', compact('warehouses'));
     }
 
     /**
@@ -27,10 +25,10 @@ class WarehouseController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function getNewWarehouse()
+    public function create()
     {
         $warehouse = new Warehouse;
-        return view('warehouses.form')->withWarehouse($warehouse);
+        return view('warehouses.form', compact('warehouse'));
     }
 
     /**
@@ -39,55 +37,54 @@ class WarehouseController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function postWarehouse(Request $request, Warehouse $warehouse)
+    public function store(Request $request)
     {
-    	$this->validate($request, [
+        $request->validate([
             'name' => 'required|max:255',
         ]);
 
-        $warehouse->name = $request->get('name');
-        $warehouse->address = $request->get('address');
-        $warehouse->phone = $request->get('phone');
-        $warehouse->in_charge_name = $request->get('in_charge_name');
+        $warehouse = $request->id ? Warehouse::findOrFail($request->id) : new Warehouse();
+        $warehouse->name = $request->name;
+        $warehouse->address = $request->address;
+        $warehouse->phone = $request->phone;
+        $warehouse->in_charge_name = $request->in_charge_name;
         $warehouse->save();
 
         $message = trans('core.changes_saved');
-        return redirect()->route('warehouse.index')->withSuccess($message);
+        return redirect()->route('warehouse.index')->with('success', $message);
     }
-
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param  Warehouse  $warehouse
      * @return \Illuminate\Http\Response
      */
-    public function getEditWarehouse(Warehouse $warehouse)
+    public function edit(Warehouse $warehouse)
     {
-        return view('warehouses.form')->withWarehouse($warehouse);
+        return view('warehouses.form', compact('warehouse'));
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  Warehouse  $warehouse
      * @return \Illuminate\Http\Response
      */
-    public function deleteWarehouse(Warehouse $warehouse)
+    public function destroy(Warehouse $warehouse)
     {
-
         $exists = User::where('warehouse_id', $warehouse->id)->count();
-        if($exists > 0){
+        if ($exists > 0) {
             $warning = "You can't delete this branch. This branch has ".$exists." active user(s)";
-            return redirect()->back()->withWarning($warning);
-        }else{
-            if(count($warehouse->transactions) ==  0){
+            return redirect()->back()->with('warning', $warning);
+        } else {
+            if ($warehouse->transactions()->count() == 0) {
                 $warehouse->delete();
                 $message = trans('core.deleted');
-                return redirect()->back()->withMessage($message);
-            }else{
+                return redirect()->back()->with('message', $message);
+            } else {
                 $warning = trans('core.warehouse_has_transactions');
-                return redirect()->back()->withWarning($warning);
+                return redirect()->back()->with('warning', $warning);
             }
         }
     }

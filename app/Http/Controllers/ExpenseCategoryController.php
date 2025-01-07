@@ -12,9 +12,15 @@ class ExpenseCategoryController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function getIndex()
+    public function getIndex(Request $request)
     {
+        $categories;
+        if($request->has('name')) {
+            $categories = ExpenseCategory::where('name', 'like', '%' . $request->get('name') . '%')->paginate(30);
+        } else {
         $categories = ExpenseCategory::paginate(30);
+        }
+
         return view('expense-category.index', compact('categories'));
     }
 
