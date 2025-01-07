@@ -36,12 +36,12 @@
 		</table>
 	</div>
 
-	<div class="panel-footer">	
+	<div class="panel-footer">
         <span style="padding: 10px;">
-        
-        </span>	
+
+        </span>
 		<a class="btn btn-border btn-alt border-black font-black btn-xs pull-right" href="{{route('home')}}">
-	        <i class="fa fa-backward"></i> 
+	        <i class="fa fa-backward"></i>
 	        {{trans('core.back')}}
 	    </a>
 	</div>
@@ -50,7 +50,7 @@
 @section('js')
 	@parent
 	<script>
-		
+
 	</script>
 
 @stop

@@ -26,22 +26,36 @@ class ReportingController extends Controller
         return view('reporting.index', compact('products', 'clients', 'categories', 'subcategories', 'warehouses'));
     }
 
+    private function getDateRange(Request $request)
+    {
+        $from = $request->get('from');
+        $to = $request->get('to') ?: date('Y-m-d');
+        $to = Carbon::createFromFormat('Y-m-d', $to)->endOfDay();
+
+        if ($from) {
+            $from = Carbon::createFromFormat('Y-m-d', $from)->startOfDay();
+        }
+
+        return [$from, $to];
+    }
+
+    private function getWarehouseName($warehouse_id)
+    {
+        return ($warehouse_id == 'all') ? 'All Branch' : optional(Warehouse::find($warehouse_id))->name;
+    }
+
     public function postPurchaseReport(Request $request)
     {
         $warehouse_id = $request->get('warehouse_id');
         $query = Transaction::where('transaction_type', 'purchase');
         $transactions = ($warehouse_id == 'all') ? $query : $query->where('warehouse_id', $warehouse_id);
-        $from = $request->get('from');
-        $to = $request->get('to') ?: date('Y-m-d');
-        $to = Carbon::createFromFormat('Y-m-d', $to)->endOfDay();
 
-        if ($from || $to) {
-            if (!is_null($from)) {
-                $from = Carbon::createFromFormat('Y-m-d', $from)->startOfDay();
-                $transactions->whereBetween('date', [$from, $to]);
-            } else {
-                $transactions->where('date', '<=', $to);
-            }
+        [$from, $to] = $this->getDateRange($request);
+
+        if ($from) {
+            $transactions->whereBetween('date', [$from, $to]);
+        } else {
+            $transactions->where('date', '<=', $to);
         }
 
         return view('reporting.purchaseReport')
@@ -53,22 +67,17 @@ class ReportingController extends Controller
     public function postSellsReport(Request $request)
     {
         $warehouse_id = $request->get('warehouse_id');
-        $warehouse_name = ($warehouse_id == 'all') ? 'All Branch' : Warehouse::find($warehouse_id)->name;
+        $warehouse_name = $this->getWarehouseName($warehouse_id);
 
         $query = Transaction::where('transaction_type', 'sell');
         $transactions = ($warehouse_id == 'all') ? $query : $query->where('warehouse_id', $warehouse_id);
 
-        $from = $request->get('from');
-        $to = $request->get('to') ?: date('Y-m-d');
-        $to = Carbon::createFromFormat('Y-m-d', $to)->endOfDay();
+        [$from, $to] = $this->getDateRange($request);
 
-        if ($from || $to) {
-            if (!is_null($from)) {
-                $from = Carbon::createFromFormat('Y-m-d', $from)->startOfDay();
-                $transactions->whereBetween('date', [$from, $to]);
-            } else {
-                $transactions->where('date', '<=', $to);
-            }
+        if ($from) {
+            $transactions->whereBetween('date', [$from, $to]);
+        } else {
+            $transactions->where('date', '<=', $to);
         }
 
         return view('reporting.sellsReport')
@@ -80,24 +89,19 @@ class ReportingController extends Controller
     public function postProductReport(Request $request)
     {
         $warehouse_id = $request->get('warehouse_id');
-        $warehouse_name = ($warehouse_id == 'all') ? 'All Branch' : Warehouse::find($warehouse_id)->name;
+        $warehouse_name = $this->getWarehouseName($warehouse_id);
 
-        $from = $request->get('from');
-        $to = $request->get('to') ?: date('Y-m-d');
-        $to = Carbon::createFromFormat('Y-m-d', $to)->endOfDay();
+        [$from, $to] = $this->getDateRange($request);
 
         $sells = ($warehouse_id == "all") ? Sell::query() : Sell::where('warehouse_id', $warehouse_id);
         $purchases = ($warehouse_id == "all") ? Purchase::query() : Purchase::where('warehouse_id', $warehouse_id);
 
-        if ($from || $to) {
-            if (!is_null($from)) {
-                $from = Carbon::createFromFormat('Y-m-d', $from)->startOfDay();
-                $sells->whereBetween('date', [$from, $to]);
-                $purchases->whereBetween('date', [$from, $to]);
-            } else {
-                $sells->where('date', '<=', $to);
-                $purchases->where('date', '<=', $to);
-            }
+        if ($from) {
+            $sells->whereBetween('date', [$from, $to]);
+            $purchases->whereBetween('date', [$from, $to]);
+        } else {
+            $sells->where('date', '<=', $to);
+            $purchases->where('date', '<=', $to);
         }
 
         $product_id = $request->get('product_id');
@@ -157,10 +161,7 @@ class ReportingController extends Controller
 
     public function postCategoryReport(Request $request)
     {
-        $to = $request->get('to') ?: date('Y-m-d');
-        $to = Carbon::createFromFormat('Y-m-d', $to)->endOfDay();
-        $from = $request->get('from');
-        $from = $from ? Carbon::createFromFormat('Y-m-d', $from)->startOfDay() : Carbon::createFromDate(1970, 1, 1, env('TIMEZONE', 'UTC'));
+        [$from, $to] = $this->getDateRange($request);
 
         $category_id = $request->get('category_id');
         $categories = ($category_id != 'all') ? Category::where('id', $category_id)->get() : Category::all();
@@ -204,10 +205,7 @@ class ReportingController extends Controller
 
     public function postSubCategoryReport(Request $request)
     {
-        $to = $request->get('to') ?: date('Y-m-d');
-        $to = Carbon::createFromFormat('Y-m-d', $to)->endOfDay();
-        $from = $request->get('from');
-        $from = $from ? Carbon::createFromFormat('Y-m-d', $from)->startOfDay() : Carbon::createFromDate(1970, 1, 1, env('TIMEZONE', 'UTC'));
+        [$from, $to] = $this->getDateRange($request);
 
         $subcategory_id = $request->get('subcategory_id');
         $subcategories = ($subcategory_id != 'all') ? Subcategory::where('id', $subcategory_id)->get() : Subcategory::all();
@@ -255,8 +253,8 @@ class ReportingController extends Controller
         $branch = $request->get('warehouse_id');
         $product_id = $request->get('product_id');
 
-        $branch_name = ($branch == 'all') ? 'All Branch' : Warehouse::find($branch)->name;
-        $product_name = ($product_id == 'all') ? 'All Product' : Product::find($product_id)->name;
+        $branch_name = $this->getWarehouseName($branch);
+        $product_name = ($product_id == 'all') ? 'All Product' : optional(Product::find($product_id))->name;
 
         $products = ($product_id == "all") ? Product::select('name', 'id', 'unit')->get() : Product::whereId($product_id)->get();
 
@@ -281,13 +279,12 @@ class ReportingController extends Controller
     public function postProfitReport(Request $request)
     {
         $branch_id = $request->get('warehouse_id');
-        $branch_name = ($branch_id == 'all') ? 'All Branch' : Warehouse::find($branch_id)->name;
+        $branch_name = $this->getWarehouseName($branch_id);
 
         $query = Transaction::where('transaction_type', 'sell');
         $transactions = ($branch_id == 'all') ? $query : $query->where('warehouse_id', $branch_id);
 
-        $from = Carbon::parse($request->get('from') ?: date('Y-m-d'))->startOfDay();
-        $to = Carbon::parse($request->get('to') ?: date('Y-m-d'))->endOfDay();
+        [$from, $to] = $this->getDateRange($request);
 
         $transactions = $transactions->whereBetween('date', [$from, $to]);
 
@@ -312,8 +309,7 @@ class ReportingController extends Controller
         $query = Client::where('client_type', 'customer')->orderBy('first_name', 'asc');
         $clients = ($request->get('client_id') == 'all') ? $query->get() : $query->where('id', $request->get('client_id'))->get();
 
-        $from = Carbon::parse($request->get('from'))->startOfDay();
-        $to = Carbon::parse($request->get('to'))->endOfDay();
+        [$from, $to] = $this->getDateRange($request);
 
         $due_details = [];
 

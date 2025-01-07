@@ -2,21 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use DB;
-use App\Tax;
+use Illuminate\Support\Facades\DB;
+use App\Models\Tax;
 use App\Models\Sell;
-use App\Client;
+use App\Models\Client;
 use App\Models\Product;
 use App\Models\Payment;
 use App\Models\Category;
 use Carbon\Carbon;
 use App\Models\Transaction;
-use App\Http\Requests;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Exceptions\ValidationException;
+use Illuminate\Validation\ValidationException;
 
-class posController extends Controller
+class PosController extends Controller
 {
     /**
      * Redirect to pos screen
@@ -34,13 +33,13 @@ class posController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function posPost (Request $request) {
+    public function posPost(Request $request) {
         $customer = $request->get('customer');
         $enableProductTax = settings('product_tax');
 
         $ym = Carbon::now()->format('Y/m');
 
-        $row = Transaction::where('transaction_type', 'sell')->withTrashed()->get()->count() > 0 ? Transaction::where('transaction_type', 'sell')->withTrashed()->get()->count() + 1 : 1;
+        $row = Transaction::where('transaction_type', 'sell')->withTrashed()->count() > 0 ? Transaction::where('transaction_type', 'sell')->withTrashed()->count() + 1 : 1;
 
         $ref_no = $ym.'/S-'.ref($row);
         $total = 0;
@@ -52,90 +51,80 @@ class posController extends Controller
 
         $transactionId = null;
 
-        DB::transaction(function() use ($request , $sells, $ref_no, &$total, &$total_cost_price, &$totalProductTax, $customer, $paid, $enableProductTax, $productTax, &$transactionId){
+        DB::transaction(function() use ($request, $sells, $ref_no, &$total, &$total_cost_price, &$totalProductTax, $customer, $paid, $enableProductTax, $productTax, &$transactionId) {
             foreach ($sells as $sell_item) {
-
-                $total = $total + ($sell_item['sell_quantity'] * $sell_item['mrp']);
-                $total_cost_price = $total_cost_price + ($sell_item['cost_price'] * $sell_item['sell_quantity']);
+                $total += $sell_item['sell_quantity'] * $sell_item['mrp'];
+                $total_cost_price += $sell_item['cost_price'] * $sell_item['sell_quantity'];
 
                 $sell = new Sell;
-                    $sell->reference_no = $ref_no;
-                    $sell->product_id = $sell_item['id'];
-                    $sell->quantity = $sell_item['sell_quantity'];
+                $sell->reference_no = $ref_no;
+                $sell->product_id = $sell_item['id'];
+                $sell->quantity = $sell_item['sell_quantity'];
 
-                    if($enableProductTax == 1){
-                        //product tax calculation
-                        $product_row = Product::findorFail($sell_item['id']);
-                        $taxRate = $product_row->tax->rate;
-                        $taxType = $product_row->tax->type;
+                if ($enableProductTax == 1) {
+                    // Product tax calculation
+                    $product_row = Product::findOrFail($sell_item['id']);
+                    $taxRate = $product_row->tax->rate;
+                    $taxType = $product_row->tax->type;
 
-                        $productTax = ($taxType == 1) ? (($sell_item['sell_quantity'] * $taxRate * $product_row->mrp) / 100) : ($sell_item['sell_quantity'] * $taxRate);
+                    $productTax = ($taxType == 1) ? (($sell_item['sell_quantity'] * $taxRate * $product_row->mrp) / 100) : ($sell_item['sell_quantity'] * $taxRate);
 
-                        $sell->product_tax = $productTax;
-                        //ends
-                        $totalProductTax = $totalProductTax + $productTax;
-                    }
+                    $sell->product_tax = $productTax;
+                    $totalProductTax += $productTax;
+                }
 
-                    $sell->unit_cost_price = $sell_item['cost_price'];
-                    $sell->sub_total = ($sell_item['sell_quantity'] * $sell_item['mrp'])- $productTax;
-                    $sell->date = Carbon::now()->format('Y-m-d H:i:s');
-                    $sell->client_id = $customer;
+                $sell->unit_cost_price = $sell_item['cost_price'];
+                $sell->sub_total = ($sell_item['sell_quantity'] * $sell_item['mrp']) - $productTax;
+                $sell->date = Carbon::now()->format('Y-m-d H:i:s');
+                $sell->client_id = $customer;
                 $sell->save();
 
-                //update quantity of product after every sell
+                // Update quantity of product after every sell
                 $product = $sell->product;
-                $product->quantity = $product->quantity - intval($sell_item['sell_quantity']);
+                $product->quantity -= intval($sell_item['sell_quantity']);
                 $product->save();
             }
 
-            //discount
+            // Discount
             $discount = $request->get('discount_amount');
             $total_payable = $total - $discount;
-            //discount ends
 
-            //invoice tax
-            if(settings('invoice_tax') == 1){
-                $invoice_tax = $request->get('invoice_tax');
-            }else{
-                $invoice_tax = 0;
-            }
-            //ends
+            // Invoice tax
+            $invoice_tax = settings('invoice_tax') == 1 ? $request->get('invoice_tax') : 0;
 
             $transaction = new Transaction;
-                $transaction->reference_no = $ref_no;
-                $transaction->client_id = $customer;
-                $transaction->transaction_type = 'sell';
-                $transaction->total_cost_price = $total_cost_price;
-                $transaction->discount = $discount;
-                //saving total without product tax and shipping cost
-                $transaction->total = $total_payable - $totalProductTax;
-                $transaction->invoice_tax = $invoice_tax;
-                $transaction->total_tax = $totalProductTax + $invoice_tax;
-                $transaction->labor_cost = 0;
-                $transaction->net_total = $total_payable + $invoice_tax;
-                $transaction->paid = ($paid > ($total_payable + $invoice_tax) ? ($total_payable + $invoice_tax) : $paid);
-                $transaction->change_amount = ($paid > ($total_payable + $invoice_tax) ? ($paid - $total_payable + $invoice_tax) : 0);
-                $transaction->pos = 1;
-                $transaction->date = Carbon::now()->format('Y-m-d H:i:s');
+            $transaction->reference_no = $ref_no;
+            $transaction->client_id = $customer;
+            $transaction->transaction_type = 'sell';
+            $transaction->total_cost_price = $total_cost_price;
+            $transaction->discount = $discount;
+            $transaction->total = $total_payable - $totalProductTax;
+            $transaction->invoice_tax = $invoice_tax;
+            $transaction->total_tax = $totalProductTax + $invoice_tax;
+            $transaction->labor_cost = 0;
+            $transaction->net_total = $total_payable + $invoice_tax;
+            $transaction->paid = ($paid > ($total_payable + $invoice_tax) ? ($total_payable + $invoice_tax) : $paid);
+            $transaction->change_amount = ($paid > ($total_payable + $invoice_tax) ? ($paid - $total_payable + $invoice_tax) : 0);
+            $transaction->pos = 1;
+            $transaction->date = Carbon::now()->format('Y-m-d H:i:s');
             $transaction->save();
 
             $transactionId = $transaction->id;
 
-            if($paid > 0){
+            if ($paid > 0) {
                 $payment = new Payment;
-                    $payment->client_id = $customer;
-                    $payment->amount = ($paid > ($total_payable + $invoice_tax) ? ($total_payable + $invoice_tax) : $paid);
-                    $payment->method = $request->get('method');
-                    $payment->type = 'credit';
-                    $payment->reference_no = $ref_no;
-                    $payment->note = "Paid for Invoice ".$ref_no;
-                    $payment->date = Carbon::now()->format('Y-m-d H:i:s');
+                $payment->client_id = $customer;
+                $payment->amount = ($paid > ($total_payable + $invoice_tax) ? ($total_payable + $invoice_tax) : $paid);
+                $payment->method = $request->get('method');
+                $payment->type = 'credit';
+                $payment->reference_no = $ref_no;
+                $payment->note = "Paid for Invoice ".$ref_no;
+                $payment->date = Carbon::now()->format('Y-m-d H:i:s');
                 $payment->save();
             }
         });
 
-        return response()->json(['id' => $transactionId,'message' => 'Successfully saved transaction.']);
-
+        return response()->json(['id' => $transactionId, 'message' => 'Successfully saved transaction.']);
     }
 
     /**
@@ -144,7 +133,7 @@ class posController extends Controller
      * @return \Illuminate\Http\Response
     */
     public function posInvoice($id) {
-        $transaction = Transaction::findorFail($id);
+        $transaction = Transaction::findOrFail($id);
         return view('pos.invoice', compact('transaction'));
     }
 
