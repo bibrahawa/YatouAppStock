@@ -18,13 +18,13 @@ class SiteinfoSeeder extends Seeder {
 
         $siteinfo = Setting::create(
             [
-                'site_name' => 'Intelle POS',
-                'slogan' => 'Complete stock management.',
-                'address' => 'Dhaka, Bangladesh',
-                'phone' => '+880 1674871091',
-                'email' => 'info@intelle-hub.com',
-                'owner_name' => 'Intelle Hub Inc.',
-                'currency_code' => 'USD',
+                'site_name' => 'Yatou Market',
+                'slogan' => 'Best Online Shopping',
+                'address' => 'Conakry, Guinea',
+                'phone' => '+224 669 702 626',
+                'email' => 'bibrah3@gmail.com',
+                'owner_name' => 'Yatou Group Inc.',
+                'currency_code' => 'GNF',
             ]
         );
 

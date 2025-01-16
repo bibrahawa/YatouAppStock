@@ -1,32 +1,33 @@
 <?php
 
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Backend\CustomersController;
+use App\Http\Controllers\Backend\ProductsController;
+use App\Http\Controllers\Backend\SellController;
+use App\Http\Controllers\ClientController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
-
-Route::get('client', 'ClientController@getClientAPI')->name('client.api');
-
-Route::prefix('v1')->namespace('API\Backend')->group(function () {
-	Route::post('customer/save', 'CustomersController@post')->name('api.v1.customer.save');	
-
-	// Frequest products
-	Route::get('products', 'ProductsController@getFrequent')->name('api.v1.products.frequent');
-	Route::get('category/{category}/products', 'ProductsController@getCategoryProducts')->name('api.v1.category.frequent');	
-	Route::get('product-by-barcode/{barcode}','ProductsController@getProductByBarcode')->name('api.v1.product.by_barcode');
-
-	//Product by search
-	Route::get('product-by-search/{search}','ProductsController@getProductBySearch')->name('api.v1.product.by_search');
-
-	//post sell by pos
-	Route::post('pos/save', 'SellController@posPost')->name('api.v1.sell.save');	
-
+// Définition des routes API
+Route::get('/teste', function () {
+    return response()->json(['message' => 'This is the teste route!']);
 });
+
+// Route pour obtenir les clients via API
+Route::get('client', [ClientController::class, 'getClientAPI'])->name('client.api');
+
+// Sauvegarde d'un client
+Route::post('customer/save', [CustomersController::class, 'post'])->name('api.v1.customer.save');
+
+// Produits fréquents
+Route::get('products', [ProductsController::class, 'getFrequent'])->name('api.v1.products.frequent');
+
+// Produits par catégorie
+Route::get('category/{category}/products', [ProductsController::class, 'getCategoryProducts'])->name('api.v1.category.frequent');
+
+// Produit par code-barres
+Route::get('product-by-barcode/{barcode}', [ProductsController::class, 'getProductByBarcode'])->name('api.v1.product.by_barcode');
+
+// Produit par recherche
+Route::get('product-by-search/{search}', [ProductsController::class, 'getProductBySearch'])->name('api.v1.product.by_search');
+
+// Sauvegarde des ventes par POS
+Route::post('pos/save', [SellController::class, 'posPost'])->name('api.v1.sell.save');

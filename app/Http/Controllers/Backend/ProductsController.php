@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\API\Backend;
+namespace App\Http\Controllers\Backend;
 
 use App\Models\Product;
 use App\Models\Category;
@@ -27,14 +27,15 @@ class ProductsController extends Controller
             $products = Product::latest()->take(25)->get();
         }
 
+        return response()->json($products);
 
-
-    	return new ProductCollection($products);
+    	// return  new ProductCollection($products);
     }
 
     public function getCategoryProducts (Category $category, Request $request) {
     	$products = $category->product()->orderBy('name', 'asc')->get();
-    	return new ProductCollection($products);
+    	// return new ProductCollection($products);
+        return response()->json($products);
     }
 
     public function getProductByBarcode (Request $request, $barcode) {
@@ -59,8 +60,11 @@ class ProductsController extends Controller
             $products = Product::orderBy('name', 'asc')->where('code','LIKE', '%' . $search . '%');
         }
 
-        return new ProductCollection($products->get());
+        
+        // return new ProductCollection($products->get());
+        return response()->json($products->get());
     }
+
 
 
 }

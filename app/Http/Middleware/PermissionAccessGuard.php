@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use App\Exceptions\FeatureNotAllowedException;
+use Auth;
 
 class PermissionAccessGuard
 {
@@ -17,9 +18,10 @@ class PermissionAccessGuard
      */
     public function handle($request, Closure $next, $permission)
     {
-        if (auth()->user()->can($permission)) {
+        if (Auth::check() && Auth::user()->can($permission)) {
             return $next($request);
         }
-        abort(401);
+
+        abort(403, 'Action non autorisée');
     }
 }

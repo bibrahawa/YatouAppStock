@@ -23,90 +23,92 @@ use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\DamageController;
 
 Route::get('/val', function () {
-    dd(user());
-});
+    dd(\Auth::user());
+})->middleware('permission:admin.access');
 
-Route::get('/', [HomeController::class, 'getIndex'])->name('home');
-Route::get('home', [HomeController::class, 'getIndex'])->name('home');
+Route::get('/', [HomeController::class, 'getIndex'])->middleware('auth')->name('home');
+Route::get('home', [HomeController::class, 'getIndex'])->middleware('auth')->name('home');
 Route::get('logout',[UserController::class, 'logout'])->name('logout');
-Route::get('lock', [UserController::class, 'lock'])->name('lock');
+Route::get('lock', [UserController::class, 'lock'])->middleware('auth')->name('lock');
 Route::get('locked', [UserController::class, 'locked'])->name('locked');
 Route::post('locked', [UserController::class, 'unlock'])->name('unlock');
 
-Route::group(['prefix'=>'admin'], function(){
+Route::group(['prefix'=>'admin', 'middleware'=> 'auth'], function(){
 
     Route::get('locale/{locale}', [SettingsController::class, 'switchLocale'])->name('locale.set');
 
-    Route::get('/cashin/today', [HomeController::class, 'todayCashIn'])->name('cashin.today');
-    Route::get('/cashout/today', [HomeController::class, 'todayCashOut'])->name('cashout.today');
-    Route::get('/transactions/today', [HomeController::class, 'todayTransaction'])->name('transactions.today');
-    Route::get('/invoice/today', [HomeController::class, 'todayInvoice'])->name('invoice.today');
+    Route::get('/cashin/today', [HomeController::class, 'todayCashIn'])->middleware('permission:cash.view')->name('cashin.today');
+    Route::get('/cashout/today', [HomeController::class, 'todayCashOut'])->middleware('permission:cash.view')->name('cashout.today');
+    Route::get('/transactions/today', [HomeController::class, 'todayTransaction'])->middleware('permission:cash.view')->name('transactions.today');
+    Route::get('/invoice/today', [HomeController::class, 'todayInvoice'])->middleware('permission:cash.view')->name('invoice.today');
     Route::post('/invoice/today', [HomeController::class, 'postTodayInvoice']);
 
-    Route::get('/bill/today', [HomeController::class, 'todaysBill'])->name('bill.today');
+    Route::get('/bill/today', [HomeController::class, 'todaysBill'])->middleware('permission:cash.view')->name('bill.today');
     Route::post('/bill/today', [HomeController::class, 'postTodayBill']);
 
-    Route::get('/expense/today', [HomeController::class, 'todayExpense'])->name('expense.today');
-    Route::get('profit/details', [HomeController::class, 'profitDetails'])->name('profit.details');
+    Route::get('/expense/today', [HomeController::class, 'todayExpense'])->middleware('permission:expense.create')->name('expense.today');
+    Route::get('profit/details', [HomeController::class, 'profitDetails'])->middleware('permission:profit.view')->name('profit.details');
 
-    Route::get('category', [CategoryController::class, 'index'])->name('category.index');
-    Route::post('category', [CategoryController::class, 'postIndex']);
-
-    Route::get('category/new', [CategoryController::class, 'create'])->name('category.new');
-    Route::post('category/new', [CategoryController::class, 'store'])->name('category.store');
-
-    Route::get('category/{category}', [CategoryController::class, 'edit'])->name('category.edit');
-    Route::put('category/{category}', [CategoryController::class, 'store'])->name('category.update');
-    Route::delete('category/delete/{category}', [CategoryController::class, 'destroy'])->name('category.delete');
+    Route::get('category', [CategoryController::class, 'index'])->middleware('permission:category.create')->name('category.index');
+    Route::post('category', [CategoryController::class, 'postIndex'])->middleware('permission:category.create');
+    Route::get('category/new', [CategoryController::class, 'create'])->middleware('permission:category.manage')->name('category.new');
+    Route::post('category/new', [CategoryController::class, 'store'])->middleware('permission:category.manage')->name('category.store');
+    Route::get('category/{category}', [CategoryController::class, 'edit'])->middleware('permission:category.manage')->name('category.edit');
+    Route::put('category/{category}', [CategoryController::class, 'store'])->middleware('permission:category.manage')->name('category.update');
+    Route::delete('category/delete/{category}', [CategoryController::class, 'destroy'])->middleware('permission:category.manage')->name('category.delete');
 
     Route::get('product/ajaxData', [CategoryController::class, 'ajaxRequest'])->name('category.subcategory');
 
-    Route::get('subcategory', [SubcategoryController::class, 'index'])->name('subcategories.index');
-    Route::post('subcategory', [SubcategoryController::class, 'postIndex']);
-    Route::get('subcategory/new', [SubcategoryController::class, 'create'])->name('subcategories.new');
-    Route::post('subcategory/new', [SubcategoryController::class, 'store'])->name('subcategories.store');
-    Route::get('subcategory/{subcategory}', [SubcategoryController::class, 'edit'])->name('subcategories.edit');
-    Route::put('subcategory/{subcategory}', [SubcategoryController::class, 'store'])->name('subcategories.update');
-    Route::get('subcategory/delete/{subcategory}', [SubcategoryController::class, 'destroy'])->name('subcategories.delete');
+    Route::get('subcategory', [SubcategoryController::class, 'index'])->middleware('permission:category.create')->name('subcategories.index');
+    Route::post('subcategory', [SubcategoryController::class, 'postIndex'])->middleware('permission:category.create');
+    Route::get('subcategory/new', [SubcategoryController::class, 'create'])->middleware('permission:category.create')->middleware('permission:category.manage')->name('subcategories.new');
+    Route::post('subcategory/new', [SubcategoryController::class, 'store'])->middleware('permission:category.create')->middleware('permission:category.manage')->name('subcategories.store');
+    Route::get('subcategory/{subcategory}', [SubcategoryController::class, 'edit'])->middleware('permission:category.manage')->name('subcategories.edit');
+    Route::put('subcategory/{subcategory}', [SubcategoryController::class, 'store'])->middleware('permission:category.manage')->name('subcategories.update');
+    Route::get('subcategory/delete/{subcategory}', [SubcategoryController::class, 'destroy'])->middleware('permission:category.manage')->name('subcategories.delete');
+    
     Route::get('subcategory/{subcategory}/product', [SubcategoryController::class, 'products'])->name('subcategory.products');
 
-
-    Route::get('product', [ProductController::class, 'getIndex'])->name('product.index');
+    // Product
+    Route::get('product', [ProductController::class, 'getIndex'])->middleware('permission:product.view')->name('product.index');
     Route::post('product', [ProductController::class, 'postIndex']);
 
-    Route::get('product/new', [ProductController::class, 'getNewProduct'])->name('product.new');
-    Route::post('product/new', [ProductController::class, 'postProduct'])->name('product.post');
+    Route::get('product/new', [ProductController::class, 'getNewProduct'])->middleware('permission:product.create')->name('product.new');
+    Route::post('product/new', [ProductController::class, 'postProduct'])->middleware('permission:product.create')->name('product.post');
 
-    Route::get('product/{product}', [ProductController::class, 'getEditProduct'])->name('product.edit');
-    Route::put('product/{product}', [ProductController::class, 'postProduct'])->name('product.update');
+    Route::get('product/{product}', [ProductController::class, 'getEditProduct'])->middleware('permission:product.manage')->name('product.edit');
+    Route::put('product/{product}', [ProductController::class, 'postProduct'])->middleware('permission:product.manage')->name('product.update');
 
     Route::get('product/{product}/details', [ProductController::class, 'getProductDetails'])->name('product.details');
 
-    Route::delete('product/delete/{product}', [ProductController::class, 'deleteProduct'])->name('product.delete');
+    Route::delete('product/delete/{product}', [ProductController::class, 'deleteProduct'])->middleware('permission:product.manage')->name('product.delete');
 
     Route::get('product/print/all', [ProductController::class, 'printAllProduct'])->name('product.printall');
 
+    Route::post('product/price/update', [ProductController::class, 'updatePrice'])->middleware('permission:product.manage')->name('product.price.update');
+
+
+    // Damage Product
     Route::get('damaged-products', [DamageController::class, 'getDamageList'])->name('damage.index');
     Route::get('damaged-products/add', [DamageController::class, 'addDamageItem'])->name('damage.new');
     Route::post('damaged-products/add', [DamageController::class, 'postDamageItem'])->name('damage.post');
 
+    // Print Barcode
     Route::get('product/{product}/print/barcode', [ProductController::class, 'printSingleBarcode'])->name('single.print_barcode');
     Route::get('product/print/barcode', [ProductController::class, 'printBarcode'])->name('product.print_barcode');
     Route::get('print-barcode-by-purchase', [ProductController::class, 'printBarcodeByPurchase'])->name('product.print_barcode_by_purchase');
-
-    Route::post('product/price/update', [ProductController::class, 'updatePrice'])->name('product.price.update');
 
     Route::get('product/alert/all', [ProductController::class, 'alertProduct'])->name('product.alert');
 
     Route::get('upload-bulk-product', [ProductController::class, 'uploadBulkProduct'])->name('product.upload');
     Route::post('upload-bulk-product', [ProductController::class, 'postBulkProduct'])->name('post.product.upload');
-
     Route::get('download/excel', [ProductController::class, 'getExcelDownload'])->name('product.export.excel');
 
+    // Purchase
     Route::get('purchase', [PurchaseController::class, 'getIndex'])->name('purchase.index');
     Route::post('purchase', [PurchaseController::class, 'postIndex']);
-    Route::get('purchase/new', [PurchaseController::class, 'getNewPurchase'])->name('purchase.item');
-    Route::post('purchase/new', [PurchaseController::class, 'postPurchase'])->name('purchase.post');
+    Route::get('purchase/new', [PurchaseController::class, 'getNewPurchase'])->middleware('permission:purchase.create')->name('purchase.item');
+    Route::post('purchase/new', [PurchaseController::class, 'postPurchase'])->middleware('permission:purchase.create')->name('purchase.post');
     Route::get('purchase/details/{transaction}', [PurchaseController::class, 'purchaseDetails'])->name('purchase.details');
     Route::get('purchase/{transaction}/invoice', [PurchaseController::class, 'purchasingInvoice'])->name('purchase.invoice');
     Route::post('purchase/delete',[PurchaseController::class, 'deletePurchase'])->name('purchase.delete');
@@ -114,70 +116,70 @@ Route::group(['prefix'=>'admin'], function(){
     Route::get('sell', [SellController::class, 'getIndex'])->name('sell.index');
     Route::post('sell', [SellController::class, 'postIndex']);
 
-    Route::get('sell/new', [SellController::class, 'getNewsell'])->name('sell.form');
-    Route::post('sell/new', [SellController::class, 'postSell'])->name('sell.post');
+    Route::get('sell/new', [SellController::class, 'getNewsell'])->middleware('permission:sell.create')->name('sell.form');
+    Route::post('sell/new', [SellController::class, 'postSell'])->middleware('permission:sell.create')->name('sell.post');
 
     Route::get('sells/details/{transaction}', [SellController::class, 'sellsDetails'])->name('sells.details');
 
     Route::get('sell/{transaction}/invoice', [SellController::class, 'sellingInvoice'])->name('sell.invoice');
 
     Route::get('sell/return/{transaction}', [SellController::class, 'returnSell'])->name('sell.return');
-    Route::post('sell/return/{transaction}', [SellController::class, 'returnSellPost'])->name('return.post');
+    Route::post('sell/return/{transaction}', [SellController::class, 'returnSellPost'])->middleware('permission:return.create')->name('return.post');
 
     Route::get('return/sell', [ReturnSellController::class, 'getReturnSell'])->name('return.sell');
     Route::get('return/search/invoice/{invoice_no}', [ReturnSellController::class, 'searchInvoice'])->name('search.invoice');
     Route::post('return/new', [ReturnSellController::class, 'postReturnSell'])->name('return.post');
 
-    Route::delete('sell/delete/{transaction}', [SellController::class, 'deleteSell'])->name('sell.delete');
+    Route::delete('sell/delete/{transaction}', [SellController::class, 'deleteSell'])->middleware('permission:sell.manage')->name('sell.delete');
 
     Route::get('pos', [posController::class, 'getPOS'])->name('sell.pos');
     Route::post('pos/sell/save', [posController::class, 'posPost'])->name('api.v1.sell.save');
     Route::get('pos/sell/invoice/{id}', [posController::class, 'posInvoice'])->name('pos.invoice');
 
     Route::post('payment', [PaymentController::class, 'postPayment'])->name('payment.post');
-    Route::get('transaction/all', [PaymentController::class, 'getIndex'])->name('payment.list');
+    Route::get('transaction/all', [PaymentController::class, 'getIndex'])->middleware('permission:transaction.view')->name('payment.list');
     Route::post('transaction/all', [PaymentController::class, 'postIndex']);
     Route::get('print/{payment}/receipt', [PaymentController::class, 'printReceipt'])->name('payment.voucher');
 
-    Route::get('client', [ClientController::class, 'getIndex'])->name('client.index');
+    Route::get('client', [ClientController::class, 'getIndex'])->middleware('permission:customer.view')->name('client.index');
     Route::post('client', [ClientController::class, 'postIndex']);
 
-    Route::get('client/new', [ClientController::class, 'getNewClient'])->name('client.new');
-    Route::get('client/{client}', [ClientController::class, 'getEditClient'])->name('client.edit');
+    Route::get('client/new', [ClientController::class, 'getNewClient'])->middleware('permission:customer.create')->name('client.new');
+    Route::get('client/{client}', [ClientController::class, 'getEditClient'])->middleware('permission:customer.manage')->name('client.edit');
 
-    Route::post('client/save', [ClientController::class, 'postClient'])->name('client.save');
+    Route::post('client/save', [ClientController::class, 'postClient'])->middleware('permission:customer.manage')->name('client.save');
 
     Route::get('client/invoices/{client}', [ClientController::class, 'getClientInvoices'])->name('client.invoices');
     Route::get('client/{client}/details', [ClientController::class, 'getDetailsClient'])->name('client.details');
     Route::get('client/transaction/{id}', [ClientController::class, 'paymentList'])->name('client.payment.list');
-    Route::delete('client/delete/{client}', [ClientController::class, 'deleteClient'])->name('client.delete');
+    Route::delete('client/delete/{client}', [ClientController::class, 'deleteClient'])->middleware('permission:customer.manage')->name('client.delete');
 
-    Route::get('purchaser', [PurchaserController::class, 'getIndex'])->name('purchaser.index');
+    Route::get('purchaser', [PurchaserController::class, 'getIndex'])->middleware('permission:supplier.view')->name('purchaser.index');
     Route::get('purchaser/{purchaser}', [PurchaserController::class, 'getEditPurchaser'])->name('purchaser.edit');
     Route::post('purchaser', [PurchaserController::class, 'postIndex']);
-    Route::get('purchaser/new', [PurchaserController::class, 'getNewPurchaser'])->name('purchaser.new');
-    Route::post('purchaser/new', [PurchaserController::class, 'postPurchaser'])->name('purchaser.store');
+    Route::get('purchaser/new', [PurchaserController::class, 'getNewPurchaser'])->middleware('permission:customer.create')->name('purchaser.new');
+    Route::post('purchaser/new', [PurchaserController::class, 'postPurchaser'])->middleware('permission:customer.create')->name('purchaser.store');
 
     Route::get('user', [UserController::class, 'getIndex'])->name('user.index');
     Route::post('user', [UserController::class, 'postIndex']);
-    Route::get('user/new', [UserController::class, 'getNewUser'])->name('user.new');
-    Route::post('user/new', [UserController::class, 'postUser'])->name('user.store');
+    Route::get('user/new', [UserController::class, 'getNewUser'])->middleware('permission:user.create')->name('user.new');
+    Route::post('user/new', [UserController::class, 'postUser'])->middleware('permission:user.create')->name('user.store');
     Route::get('user/profile', [UserController::class, 'viewProfile'])->name('user.profile');
     Route::post('user/verify-old-password', [UserController::class, 'verifyOldPassword'])->name('user.old-password');
     Route::post('user/profile', [UserController::class, 'postProfile'])->name('user.profile.post');
     Route::post('change/password', [UserController::class, 'changePassword'])->name('change.password');
-    Route::post('user/status', [UserController::class, 'postStatus'])->name('user.status');
-    Route::get('user/{user}/edit', [UserController::class, 'getEditUser'])->name('user.edit');
-    Route::put('user/{user}/update', [UserController::class, 'postUser'])->name('user.store');
+    Route::post('user/status', [UserController::class, 'postStatus'])->middleware('permission:user.manage')->name('user.status');
+    Route::get('user/{user}/edit', [UserController::class, 'getEditUser'])->middleware('permission:user.manage')->name('user.edit');
+    Route::put('user/{user}/update', [UserController::class, 'postUser'])->middleware('permission:user.manage')->name('user.store');
 
     Route::get('expense', [ExpenseController::class, 'getIndex'])->name('expense.index');
-    Route::post('expense', [ExpenseController::class, 'postIndex'])->name('expense.post');
+    Route::post('expense', [ExpenseController::class, 'postIndex'])->middleware('permission:expense.create')->name('expense.post');
     Route::post('expense/search', [ExpenseController::class, 'postSearch'])->name('expense.search');
     Route::post('expense/edit', [ExpenseController::class, 'editExpense'])->name('expense.edit');
     Route::post('expense/delete', [ExpenseController::class, 'deleteExpense'])->name('expense.delete');
 
     Route::get('expense-category', [ExpenseCategoryController::class, 'getIndex'])->name('expense.category.index');
-    Route::post('expense-category', [ExpenseCategoryController::class, 'postIndex'])->name('expense.category.post');
+    Route::post('expense-category', [ExpenseCategoryController::class, 'postIndex'])->middleware('permission:expense.create')->name('expense.category.post');
     Route::post('expense-category/edit', [ExpenseCategoryController::class, 'editExpenseCategory'])->name('expense.category.edit');
     Route::post('expense-category/delete', [ExpenseCategoryController::class, 'deleteExpenseCategory'])->name('expense.category.delete');
 
@@ -185,8 +187,8 @@ Route::group(['prefix'=>'admin'], function(){
     Route::post('cash_register', [ExpenseController::class, 'cashRegister'])->name('cash_register.post');
 
     Route::get('settings', [SettingsController::class, 'getIndex'])->name('settings.index');
-    Route::post('settings', [SettingsController::class, 'postIndex'])->name('settings.post');
-    Route::get('settings/backup', [SettingsController::class, 'getBackup'])->name('settings.backup');
+    Route::post('settings', [SettingsController::class, 'postIndex'])->middleware('permission:settings.manage')->name('settings.post');
+    Route::get('settings/backup', [SettingsController::class, 'getBackup'])->middleware('permission:admins.manage')->name('settings.backup');
 
     Route::get('report', [ReportingController::class, 'getIndex'])->name('report.index');
     Route::post('report/purchase-report', [ReportingController::class, 'postPurchaseReport'])->name('report.purchase');
@@ -202,8 +204,8 @@ Route::group(['prefix'=>'admin'], function(){
 
     Route::get('role', [RolePermissionController::class, 'getIndex'])->name('role.index');
     Route::post('role', [RolePermissionController::class, 'postRole'])->name('role.post');
-    Route::get('role/{role}/permission', [RolePermissionController::class, 'setRolePermissions'])->name('role.permission');
-    Route::post('role/{role}/permission', [RolePermissionController::class, 'postRolePermissions'])->name('post.role.permission');
+    Route::get('role/{role}/permission', [RolePermissionController::class, 'setRolePermissions'])->middleware('permission:admins.manage')->name('role.permission');
+    Route::post('role/{role}/permission', [RolePermissionController::class, 'postRolePermissions'])->middleware('permission:admins.manage')->name('post.role.permission');
 
     Route::get('vat', [TaxController::class, 'getIndex'])->name('tax.index');
     Route::post('vat', [TaxController::class, 'postTax'])->name('tax.post');

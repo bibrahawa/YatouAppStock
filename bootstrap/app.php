@@ -3,19 +3,24 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use \App\Http\Middleware\PermissionAccessGuard;
+use \App\Http\Middleware\RoleAccessGuard;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        api: __DIR__.'/../routes/api.php',
+        apiPrefix: 'api/admin',
+        
     )
     ->withMiddleware(function (Middleware $middleware) {
 
-        // $middleware->add('guest', \App\Http\Middleware\RedirectIfAuthenticated::class);
-        // $middleware->add('role', \App\Http\Middleware\RoleAccessGuard::class);
-        // $middleware->add('permission', \App\Http\Middleware\PermissionAccessGuard::class);
-
+        $middleware->alias([
+            'permission' => PermissionAccessGuard::class,
+            'role' => RoleAccessGuard::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

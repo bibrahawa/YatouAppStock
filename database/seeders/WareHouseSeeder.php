@@ -18,11 +18,11 @@ class WareHouseSeeder extends Seeder {
 
         $warehouse = Warehouse::create(
             [
-                'name' => 'Main Branch',
-                'address' => '',
-                'phone' => '',
-                'email' => '',
-                'in_charge_name' => '',
+                'name' => 'Supermarcher Yatou',
+                'address' => "Rond Point D'odienne",
+                'phone' => '+225 05 06 00 00 26',
+                'email' => 'alhassane@yatou.store',
+                'in_charge_name' => 'Alhassane Barry',
             ]
         );
 

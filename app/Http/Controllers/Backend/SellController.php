@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\API\Backend;
+namespace App\Http\Controllers\Backend;
 
 use DB;
 use App\Models\Sell;
