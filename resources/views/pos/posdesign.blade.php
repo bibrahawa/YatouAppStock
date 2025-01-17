@@ -4,248 +4,265 @@
     @parent
 @stop
 
+@section('css')
+<style>
+    .loader_page {
+        border: 8px solid #f3f3f3; /* Gris clair */
+        border-top: 8px solid #3498db; /* Bleu */
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
+@stop
+
 @section('main-content')
-    <div class="panel panel-default" id="app">
+
+    <div class="panel panel-default" id="app" style="display: none;">
         <div class="panel-body">
-            <div class="row">
-                <form method="post">
-                    <div class="col-md-4" style="border: 2px solid #ddd;">
-                        <div class="row pad5A">
-                            <div class="col-md-10 pad5A">
-                                <select class="form-control" v-model="customer" data-live-search="true">
-                                    <option v-for="customerData in customers" :value="customerData.id">
-                                        @{{ customerData.first_name + ' ' + customerData.last_name }}
-                                    </option>
-                                </select>
-                            </div>
-                            <div class="col-md-2 pad5A">
-                                <a class="btn btn-default btn-block zero-border-radius" data-toggle="modal" data-target="#customerModal">
-                                    <i class="fa fa-plus"></i>
-                                </a>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-12">
-                                <input type="text" class="form-control" v-model="barcode" @keyup.prevent="getProductByBarcode" placeholder="Scan your barcode" />
-                            </div>
-                        </div>
-
-                        <div style="min-height: 380px; overflow-y: scroll;">
-                            <table class="table table-bordered">
-                                <tr class="{{ settings('theme') }} pos-table-header">
-                                    <td width="30%" class="text-center">{{ trans('core.product') }}</td>
-                                    <td width="10%" class="text-center">{{ trans('core.quantity') }}</td>
-                                    <td width="25%" class="text-center">{{ trans('core.unit_price') }}</td>
-                                    <td width="25%" class="text-center">{{ trans('core.sub_total') }}</td>
-                                    <td width="10%" class="text-center">
-                                        <i class="fa fa-trash"></i>
-                                    </td>
-                                </tr>
-
-                                <tr v-for="product in selectedProducts" :key="product.uuid">
-                                    <td class="text-center">
-                                        @{{ product.name }}
-                                    </td>
-
-                                    <td class="text-center">
-                                        <input type="text" v-model='product.sell_quantity' class="form-control text-center" onkeypress='return event.charCode <= 57 && event.charCode != 32' @keyup.prevent="addQuantity(product)">
-                                    </td>
-
-                                    <td class="text-center">
-                                        @{{ product.mrp }}
-                                    </td>
-
-                                    <td class="text-center">
-                                        @{{ parseFloat(product.mrp * product.sell_quantity).toFixed(2) }}
-                                    </td>
-
-                                    <td @click.prevent="removeFromSelected(product)" class="text-center" style="cursor: pointer;">
-                                        <i class="fa fa-times"></i>
-                                    </td>
-                                </tr>
-                            </table>
-                        </div>
-
-                        <!--POS Table footer-->
-                        <div class="col-md-12 {{ settings('theme') }}" style="margin-bottom: 10px;">
-                            <div class="row pos-footer">
-                                <div class="col-md-12 padLpadR0">
-                                    <table class="pos-table">
-                                        <tr>
-                                            <td width="25%" height="25px">
-                                                {{ trans('core.total_item') }}:
-                                            </td>
-                                            <td width="25%" height="25px" align="right">
-                                                <div>@{{ totalQuantity }}</div>
-                                            </td>
-                                            <td width="25%" height="25px" align="right">
-                                                {{ trans('core.total') }}:
-                                            </td>
-                                            <td width="25%" height="25px" align="right">
-                                                <div>@{{ subTotal }}</div>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <div class="row pos-footer">
-                                <div class="col-md-12 padLpadR0">
-                                    <table class="pos-table">
-                                        <tr>
-                                            <td width="30%" height="25px">
-                                                {{ trans('core.discount') }}:
-                                            </td>
-                                            <td width="20%" height="25px">
-                                                <input type="text" v-model='discount' class="pos-discount-input"/>
-                                            </td>
-                                            <td width="25%" height="25px" align="right">
-                                                {{ trans('core.amount') }}:
-                                            </td>
-                                            <td width="25%" height="25px" align="right">
-                                                <div>@{{ discountAmount }}</div>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <div class="row pos-footer">
-                                <div class="col-md-12 padLpadR0">
-                                    <table class="pos-table">
-                                        <tr>
-                                            <td width="75%" height="25px" align="right">
-                                                {{ trans('core.vat') }}:
-                                            </td>
-                                            <td width="50%" height="25px" align="right">
-                                                <div>@{{ invoiceTax }}</div>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <div class="row pos-total">
-                                <div class="col-md-12 padLpadR0">
-                                    <table class="pos-table">
-                                        <tr>
-                                            <td width="50%" height="30px">
-                                                {{ trans('core.total_payable') }}:
-                                            </td>
-                                            <td width="50%" height="30px" align="right">
-                                                <div id="total_payable">@{{ netTotal }}</div>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-12 pad10A">
-                                    <div class="pull-right">
-                                        <button type="button" class="btn btn-danger">
-                                            {{ trans('core.cancel') }}
-                                        </button>
-                                        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#paymentModal">
-                                            {{ trans('core.payment') }}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-
-                <div class="col-md-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <!-- Section des produits -->
+                <div class="col-span-2">
                     <div class="panel panel-default" style="border: 1px solid #ddd;">
                         <div class="panel-body">
-                            <div class="row" style="margin-left: 0px; margin-right: 0px;">
-                                <div class="col-md-12" style="padding-left: 15px; padding-right: 15px; padding-top: 10px;">
-                                    <input type="text" class="form-control" style="border: 1px solid #3a3a3a; color: #010101;" placeholder="Search" v-model="search" @keyup.prevent="getProductBySearch"/>
+                            <div class="relative w-full">
+                                <input 
+                                    type="text" 
+                                    class="form-control border border-gray-300 rounded-lg pl-4 pr-12 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                    placeholder="Search" 
+                                    v-model="search" 
+                                    @keyup.prevent="getProductBySearch"
+                                />
+                                <i 
+                                    class="fa fa-refresh absolute top-1/2 right-4 transform -translate-y-1/2 text-gray-500 cursor-pointer" 
+                                    @click="loadProducts('all')">
+                                </i>
+                            </div>
+                            <div v-if="loading" class="flex items-center justify-center min-h-[535px] bg-gray-100">
+                                <div id="loader" class="flex space-x-2">
+                                    <div class="w-5 h-5 bg-blue-600 rounded-full animate-bounce"></div>
+                                    <div class="w-5 h-5 bg-blue-400 rounded-full animate-bounce delay-200"></div>
+                                    <div class="w-5 h-5 bg-blue-200 rounded-full animate-bounce delay-400"></div>
                                 </div>
                             </div>
-
-                            <div class="row" style="margin-left: 0px; margin-right: 0px;">
-                                <div class="col-md-12 pos-cat-div">
-                                    <div class="regular slider" style="width: 100%">
-                                        <a
-                                            data-toggle="tab"
-                                            href="#all"
-                                            class="pos-single-cat {{ settings('theme') }} active"
-                                            @click="loadProducts('all')"
-                                        >
-                                            Frequent
-                                        </a>
-
-                                        @foreach($categories as $category)
-                                            <a
-                                                data-toggle="tab"
-                                                href="#tab{{ $category->id }}"
-                                                class="pos-single-cat {{ settings('theme') }}"
-                                                @click="loadProducts({{ $category->id }})"
-                                            >
-                                                {{ $category->category_name }}
-                                            </a>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!--Show the products-->
-                            <div style="min-height: 535px;" v-if="loading">
-                                <center>
-                                    <div id="loader">
-                                        <div class="a"></div>
-                                        <div class="b"></div>
-                                        <div class="c"></div>
-                                        <div class="d"></div>
-                                    </div>
-                                </center>
-                            </div>
-
-                            <div v-else class="" style="min-height: 535px;">
+                            
+                            <div v-else class="min-h-[535px] bg-gray-50 py-6">
                                 <div role="allTab" class="tab-pane active" id="all">
-                                    <div class="col-md-12">
-                                        <div class="col-md-2 pos-product-col" v-for="product in products" :key="product.id"
-                                            @click.prevent="addToSelected(product)" style="min-height: 170px; max-height: 170px; background-color: #FFF;">
-                                            <center>
-                                                <img v-if="product.image" :src="'/uploads/products/' + product.image" class="img-responsive img-rounded" :alt="product.name">
-                                                <img v-else src="{{ asset('uploads/products/8NKeIGlWVSCE.png') }}" :alt="product.name" class="img-responsive img-rounded">
-
-                                                <p style="min-height: 60px;">@{{ product.name }}</p>
-                                                <small v-if="product.quantity > 0">
-                                                    <b>In Stock: @{{ product.quantity }}</b>
+                                    <div class="container mx-auto px-4">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                                            <div 
+                                                v-for="product in products" 
+                                                :key="product.id" 
+                                                class="group relative flex flex-col items-center p-3 bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow transform hover:scale-105"
+                                                @click.prevent="addToSelected(product)"
+                                            >
+                                                <!-- Badge Stock -->
+                                                <div 
+                                                    class="absolute top-2 right-1 px-5 py-3 text-sm font-semibold text-green-800 bg-green-200 rounded-full">
+                                                    @{{ product.quantity }}
+                                                </div>
+                                                
+                                                <!-- Product Image -->
+                                                <img 
+                                                    v-if="product.image" 
+                                                    :src="'/uploads/products/' + product.image" 
+                                                    class="w-28 h-28 object-contain mb-4 transition-transform duration-200 group-hover:scale-110"
+                                                    :alt="product.name"
+                                                >
+                                                <img 
+                                                    v-else 
+                                                    src="{{ asset('uploads/products/8NKeIGlWVSCE.png') }}" 
+                                                    alt="Placeholder Image" 
+                                                    class="w-28 h-28 object-contain mb-4 transition-transform duration-200 group-hover:scale-110"
+                                                >
+                                                
+                                                <!-- Product Name -->
+                                                <p class="text-center text-base font-semibold text-gray-700 group-hover:text-blue-600 min-h-[40px]">
+                                                    @{{ product.name }}
+                                                </p>
+                                                
+                                                <!-- Product Quantity -->
+                                                <small class="mt-2 text-xl font-semibold text-gray-500">
+                                                    Prix: @{{ product.mrp }}
                                                 </small>
-                                                <small v-else>Out Of Stock</small>
-                                            </center>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                @foreach($categories as $category)
-                                    <div role="tabpanel" class="tab-pane" id="tab{{ $category->id }}">
-                                        <div class="col-md-12">
-                                            <div class="col-md-2 pos-product-col" v-for="product in products" :key="product.id" @click.prevent="addToSelected(product)" style="min-height: 170px; background-color: #FFF;">
-                                                <center>
-                                                    <img v-if="product.image" :src="'/uploads/products/' + product.image" :alt="product.name" class="img-responsive img-rounded">
-                                                    <img v-else src="{{ asset('uploads/products/8NKeIGlWVSCE.png') }}" :alt="product.name" class="img-responsive img-rounded">
-
-                                                    <p>@{{ product.name }}</p>
-                                                    <small v-if="product.quantity >= 0">
-                                                        Stock: @{{ product.quantity }}
-                                                    </small>
-                                                    <small v-else>Out Of Stock</small>
-                                                </center>
                                             </div>
                                         </div>
                                     </div>
-                                @endforeach
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            
+                <!-- Section du panier -->
+                <div class="col-span-1">
+                    <form method="post" style="border: 1px solid #ddd;" class="bg-white p-6 shadow-lg rounded-lg mx-auto">
+                        <!-- Sélection du client -->
+                        <div class="flex items-center gap-4 mb-6">
+                            <select 
+                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200" 
+                            v-model="customer" 
+                            aria-label="Sélectionnez un client"
+                            data-live-search="true"
+                            >
+                            <option v-for="customerData in customers" :value="customerData.id">
+                                @{{ customerData.first_name + ' ' + customerData.last_name }}
+                            </option>
+                            </select>
+                            <button 
+                            type="button" 
+                            class="p-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-200" 
+                            data-toggle="modal" 
+                            data-target="#customerModal" 
+                            aria-label="Ajouter un client"
+                            >
+                            <i class="fa fa-plus"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Saisie du code-barres -->
+                        <div class="mb-6">
+                            <div class="relative">
+                            <input 
+                                type="text" 
+                                class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200" 
+                                v-model="barcode" 
+                                @keyup.prevent="getProductByBarcode" 
+                                placeholder="Scannez votre code-barres" 
+                                aria-label="Code-barres"
+                            />
+                            <i class="fa fa-barcode absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Tableau des produits avec scroller -->
+                        <div class="overflow-y-auto bg-gray-50 rounded-lg shadow-md mb-6" style="max-height: 300px;">
+                            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                <thead class="bg-indigo-600 text-white">
+                                    <tr>
+                                        <th class="py-3 px-4 text-left">{{ trans('core.product') }}</th>
+                                        <th class="py-3 px-4 text-center">{{ trans('core.quantity') }}</th>
+                                        <th class="py-3 px-4 text-right">{{ trans('core.unit_price') }}</th>
+                                        <th class="py-3 px-4 text-right">{{ trans('core.sub_total') }}</th>
+                                        <th class="py-3 px-4 text-center">
+                                            <i class="fa fa-trash"></i>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <tr v-for="product in selectedProducts" :key="product.uuid" class="hover:bg-indigo-50">
+                                        <td class="py-3 px-4">@{{ product.name }}</td>
+                                        <td class="py-3 px-4 text-center">
+                                            <div class="flex items-center justify-center gap-2">
+                                                <button 
+                                                type="button" 
+                                                class="px-2 py-1 bg-gray-200 rounded-lg hover:bg-gray-300" 
+                                                @click="decrementQuantity(product)"
+                                                aria-label="Diminuer la quantité"
+                                                >
+                                                -
+                                                </button>
+                                                <span class="px-2">@{{ product.sell_quantity }}</span>
+                                                <button 
+                                                type="button" 
+                                                class="px-2 py-1 bg-gray-200 rounded-lg hover:bg-gray-300" 
+                                                @click="addQuantity(product)"
+                                                aria-label="Augmenter la quantité"
+                                                >
+                                                +
+                                                </button>
+                                            </div>
+                                            </td>
+                                        <td class="py-3 px-4 text-right">@{{ product.mrp }}</td>
+                                        <td class="py-3 px-4 text-right">@{{ (product.mrp * product.sell_quantity) }}</td>
+                                        <td class="py-3 px-4 text-center text-red-500 cursor-pointer" @click.prevent="removeFromSelected(product)">
+                                            <i class="fa fa-times"></i>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Résumé simplifié -->
+                        <div class="p-8 bg-white rounded-xl shadow-xl space-y-8">
+                            <!-- Total, Discount, Total Payable -->
+                            <div class="flex justify-between items-center text-gray-900 font-semibold">
+                                <span class="text-xl">{{ trans('core.total') }}:</span>
+                                <span class="text-2xl font-extrabold">@{{ subTotal | currency }}</span>
+                            </div>
+                            <div class="flex justify-between items-center text-gray-900 font-semibold">
+                                <span class="text-xl">{{ trans('core.discount') }}:</span>
+                                <div class="flex items-center gap-3">
+                                    <div class="relative w-36">
+                                        <input 
+                                            type="number" 
+                                            v-model="discount" 
+                                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-right focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-400" 
+                                            placeholder="0.00" 
+                                        />
+                                        <span class="absolute top-1/2 right-4 -translate-y-1/2 text-gray-500">CFA</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center text-gray-900 font-semibold">
+                                <span class="text-xl">{{ trans('core.total_payable') }}:</span>
+                                <span class="text-2xl font-extrabold text-indigo-600">@{{ netTotal | currency }}</span>
+                            </div>
+
+                            <!-- Montant dû et payé -->
+                            <div class="flex justify-between items-center text-gray-900 font-semibold mt-6">
+                                <span class="text-xl">{{ trans('core.amount_due') }}:</span>
+                                <span class="text-2xl font-extrabold text-red-500">@{{ (netTotal - paid) >= 0 ? (netTotal - paid | currency) : '0' }}</span>
+                            </div>
+                            <div class="flex justify-between items-center text-gray-900 font-semibold">
+                                <span class="text-xl">{{ trans('core.amount_paid') }}:</span>
+                                <div class="relative w-36">
+                                    <input 
+                                        type="number" 
+                                        v-model="paid" 
+                                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-right focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-400" 
+                                        placeholder="0.00" 
+                                    />
+                                    <span class="absolute top-1/2 right-4 -translate-y-1/2 text-gray-500">CFA</span>
+                                </div>
+                            </div>
+
+                            <!-- Change Amount -->
+                            <div class="flex justify-between items-center text-gray-900 font-semibold mt-6">
+                                <span class="text-xl">{{ trans('core.change') }}:</span>
+                                <span class="text-2xl font-extrabold text-green-500">@{{ (paid - netTotal) >= 0 ? (paid - netTotal | currency) : '0' }}</span>
+                            </div>
+
+                            <!-- Boutons d'action -->
+                            <div class="mt-8 flex justify-between gap-4">
+                                <button 
+                                    type="button" 
+                                    class="w-full py-4 bg-indigo-600 text-white rounded-lg text-xl font-medium hover:bg-indigo-700 transition duration-200 focus:ring-4 focus:ring-indigo-200"
+                                    data-toggle="modal" 
+                                    data-target="#paymentModal" 
+                                    aria-label="Paiement"
+                                >
+                                    {{ trans('core.payment') }}
+                                </button>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
             </div>
+
+
         </div>
 
         <!--Create customer modal body-->
@@ -256,6 +273,10 @@
         @include('pos.partials.pos-payment')
         <!--Payment Modal Ends-->
 
+    </div>
+
+    <div id="loader_page" style="display: flex; justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: white; z-index: 9999;">
+        <div class="loader_page"></div>
     </div>
 @stop
 
@@ -338,6 +359,14 @@
 
             },
             methods:{
+                addQuantity: function(product) {
+                    product.sell_quantity += 1;
+                },
+                decrementQuantity: function(product) {
+                    if (product.sell_quantity > 0) {
+                        product.sell_quantity -= 1;
+                    }
+                },
                 addQuantity: function (product) {
                     var quantityToAdd = parseInt(product.sell_quantity)
                     this.addToSelected(product, quantityToAdd, true)
@@ -383,7 +412,7 @@
                                 '/api/admin/category/' + data + '/products'
                     axios.get(getUrl)
                         .then(function (response) {
-                            self.products = response.data.data
+                            self.products = response.data
                             self.loading = false
                         })
                         .catch(function (response) {
@@ -398,7 +427,7 @@
                     var searchUrl = '/api/admin/product-by-search/' + self.search
                     axios.get(searchUrl)
                         .then(function (response) {
-                            self.products = response.data.data
+                            self.products = response.data
                             self.loading = false
                         })
                         .catch(function (response) {
@@ -468,6 +497,8 @@
             },
 
             mounted: function () {
+                document.getElementById("loader_page").style.display = "none";
+                document.getElementById("app").style.display = "block";
                 this.loadClients()
                 this.loadProducts('all')
             }

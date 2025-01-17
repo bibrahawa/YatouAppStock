@@ -6,6 +6,7 @@
         @show
     </title>
     <meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="/assets/js-core/modernizr.js"></script>
     <!-- CSS -->
     <link rel="stylesheet" href="/base.css">

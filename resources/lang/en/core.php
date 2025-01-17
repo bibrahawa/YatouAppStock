@@ -171,7 +171,7 @@ return [
     'confirm_password' => 'Confirm Password',
     'phone' => 'Phone',
     'price' => 'Price',
-    'product' => 'Product',
+    'product' => 'Produit',
     'product_settings'  => 'Product Settings',
     'product_revenue' => 'Product Revenue',
     'product_index' => 'Product Index',
@@ -199,7 +199,7 @@ return [
     'print_barcode_by_purchase' => 'Print Barcode By Bill',
 
 
-    'quantity' => 'Quantity',
+    'quantity' => 'Quantite',
 
     'retailer' => 'Retailer',
     're_type_password' => 'Re-Type Password',
@@ -254,7 +254,7 @@ return [
     'subcategory' => 'Subcategory',
     'subcategory_index' => 'Subcategory Index',
     'subcategory_name' => 'Subcategory Name',
-    'sub_total' => 'Sub Total',
+    'sub_total' => 'Total',
     'sign_out' => 'Sign Out',
     'submit' => 'Submit',
     'stock' => 'Stock',
@@ -308,7 +308,7 @@ return [
     'user' => 'User',
     'user_list' => 'Users List',
     'unit' => 'Unit',
-    'unit_price' => 'Unit Price',
+    'unit_price' => 'Prix',
     'unit_cost' => 'Unit Cost',
 
 
