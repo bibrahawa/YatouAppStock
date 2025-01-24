@@ -167,93 +167,110 @@
                                             <div class="flex items-center justify-center gap-2">
                                                 <button 
                                                 type="button" 
-                                                class="px-2 py-1 bg-gray-200 rounded-lg hover:bg-gray-300" 
+                                                class="px-4 py-1 bg-gray-200 rounded-lg hover:bg-gray-300" 
                                                 @click="decrementQuantity(product)"
                                                 aria-label="Diminuer la quantité"
                                                 >
                                                 -
                                                 </button>
-                                                <span class="px-2">@{{ product.sell_quantity }}</span>
+                                                <span class="px-4">@{{ product.sell_quantity }}</span>
                                                 <button 
                                                 type="button" 
-                                                class="px-2 py-1 bg-gray-200 rounded-lg hover:bg-gray-300" 
+                                                class="px-4 py-1 bg-gray-200 rounded-lg hover:bg-gray-300" 
                                                 @click="addQuantity(product)"
                                                 aria-label="Augmenter la quantité"
                                                 >
                                                 +
                                                 </button>
                                             </div>
-                                            </td>
-                                        <td class="py-3 px-4 text-right">@{{ product.mrp }}</td>
-                                        <td class="py-3 px-4 text-right">@{{ (product.mrp * product.sell_quantity) }}</td>
-                                        <td class="py-3 px-4 text-center text-red-500 cursor-pointer" @click.prevent="removeFromSelected(product)">
+                                        </td>
+                                        <td style="font-size: 10px" class="py-3 px-4 text-right">@{{ product.mrp }}</td>
+                                        <td style="font-size: 10px" class="py-3 px-4 text-right">@{{ (product.mrp * product.sell_quantity) }}</td>
+                                        <td style="font-size: 20px" class="py-3 px-4 text-center text-red-500 cursor-pointer" @click.prevent="removeFromSelected(product)">
                                             <i class="fa fa-times"></i>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
+
+
+                        <div class="p-6 bg-gray-50 border-t border-gray-100">
+                            <!-- Calculations -->
+                            <div class="space-y-4 mb-8">
+                                <!-- Subtotal -->
+                                <div class="flex justify-between items-center text-base">
+                                    <span class="text-gray-700 font-medium">Sous-total</span>
+                                    <span class="font-semibold text-gray-900 text-lg">@{{ subTotal }} CFA</span>
+                                </div>
                         
-                        <!-- Résumé simplifié -->
-                        <div class="p-8 bg-white rounded-xl shadow-xl space-y-8">
-                            <!-- Total, Discount, Total Payable -->
-                            <div class="flex justify-between items-center text-gray-900 font-semibold">
-                                <span class="text-xl">{{ trans('core.total') }}:</span>
-                                <span class="text-2xl font-extrabold">@{{ subTotal | currency }}</span>
-                            </div>
-                            <div class="flex justify-between items-center text-gray-900 font-semibold">
-                                <span class="text-xl">{{ trans('core.discount') }}:</span>
-                                <div class="flex items-center gap-3">
-                                    <div class="relative w-36">
+                                <!-- Enhanced Discount Input -->
+                                <div class="flex justify-between items-center">
+                                    <label class="text-gray-700 font-medium text-base">Remise</label>
+                                    <div class="relative w-48">
                                         <input 
-                                            type="number" 
-                                            v-model="discount" 
-                                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-right focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-400" 
-                                            placeholder="0.00" 
+                                            type="text"
+                                            v-model="discount"
+                                            class="w-full h-12 px-4 pr-14 text-right text-base rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                            placeholder="0"
                                         />
-                                        <span class="absolute top-1/2 right-4 -translate-y-1/2 text-gray-500">CFA</span>
+                                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-base text-gray-500">CFA</span>
+                                    </div>
+                                </div>
+                        
+                                <!-- Total with emphasis -->
+                                <div class="pt-4 border-t border-gray-200">
+                                    <div class="flex justify-between items-center text-xl font-bold">
+                                        <span class="text-gray-900">Total</span>
+                                        <span class="text-blue-700">@{{ netTotal }} CFA</span>
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex justify-between items-center text-gray-900 font-semibold">
-                                <span class="text-xl">{{ trans('core.total_payable') }}:</span>
-                                <span class="text-2xl font-extrabold text-indigo-600">@{{ netTotal | currency }}</span>
-                            </div>
-
-                            <!-- Montant dû et payé -->
-                            <div class="flex justify-between items-center text-gray-900 font-semibold mt-6">
-                                <span class="text-xl">{{ trans('core.amount_due') }}:</span>
-                                <span class="text-2xl font-extrabold text-red-500">@{{ (netTotal - paid) >= 0 ? (netTotal - paid | currency) : '0' }}</span>
-                            </div>
-                            <div class="flex justify-between items-center text-gray-900 font-semibold">
-                                <span class="text-xl">{{ trans('core.amount_paid') }}:</span>
-                                <div class="relative w-36">
-                                    <input 
-                                        type="number" 
-                                        v-model="paid" 
-                                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-right focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-400" 
-                                        placeholder="0.00" 
-                                    />
-                                    <span class="absolute top-1/2 right-4 -translate-y-1/2 text-gray-500">CFA</span>
+                        
+                            <!-- Enhanced Payment Section -->
+                            {{-- <div class="bg-white rounded-xl p-5 mb-6 border border-gray-200 shadow-sm">
+                                <div class="space-y-4">
+                                    <!-- Payment Input -->
+                                    <div class="flex justify-between items-center">
+                                        <label class="text-gray-700 font-medium">Montant perçu</label>
+                                        <div class="relative w-60">
+                                            <input 
+                                                type="text"
+                                                v-model="paid"
+                                                class="w-full h-12 px-4 pr-14 text-right rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                                placeholder="0"
+                                            />
+                                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-base text-gray-500">CFA</span>
+                                        </div>
+                                    </div>
+                        
+                                    <!-- Change Amount -->
+                                    <div class="flex justify-between items-center pt-3 border-t border-gray-100">
+                                        <span class="text-gray-700 font-medium">Monnaie</span>
+                                        <span class="font-semibold text-green-600 text-xl">@{{ paid - netTotal > 0 ? paid - netTotal : 0 }} CFA</span>
+                                    </div>
                                 </div>
-                            </div>
-
-                            <!-- Change Amount -->
-                            <div class="flex justify-between items-center text-gray-900 font-semibold mt-6">
-                                <span class="text-xl">{{ trans('core.change') }}:</span>
-                                <span class="text-2xl font-extrabold text-green-500">@{{ (paid - netTotal) >= 0 ? (paid - netTotal | currency) : '0' }}</span>
-                            </div>
-
-                            <!-- Boutons d'action -->
-                            <div class="mt-8 flex justify-between gap-4">
+                            </div> --}}
+                        
+                            <!-- Action Buttons -->
+                            <div class="grid grid-cols-2 gap-4">
                                 <button 
-                                    type="button" 
-                                    class="w-full py-4 bg-indigo-600 text-white rounded-lg text-xl font-medium hover:bg-indigo-700 transition duration-200 focus:ring-4 focus:ring-indigo-200"
+                                    type="button"
+                                    class="h-14 text-base bg-gray-200 text-gray-800 rounded-xl font-semibold hover:bg-gray-300 focus:ring-4 focus:ring-gray-200 transition-all disabled:opacity-50"
+                                    :disabled="Object.keys(selectedProducts).length === 0"
+                                    @click="resetSale()"
+                                >
+                                    <i class="fa fa-times mr-3"></i>Annuler
+                                </button>
+                                <button 
+                                    type="button"
+                                    class="h-14 text-base bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition-all disabled:opacity-50"
+                                    :disabled="Object.keys(selectedProducts).length === 0"
                                     data-toggle="modal" 
                                     data-target="#paymentModal" 
-                                    aria-label="Paiement"
+                                    aria-label="Confirmer le paiement"
                                 >
-                                    {{ trans('core.payment') }}
+                                    <i class="fa fa-check mr-3"></i>Payer
                                 </button>
                             </div>
                         </div>
@@ -261,7 +278,6 @@
                     </form>
                 </div>
             </div>
-
 
         </div>
 
@@ -315,8 +331,18 @@
                 reference_no: '',
                 search: '',
                 loading: false,
+                isSubmitting:false,
             },
             computed: {
+                formattedAmount(amount) {
+                    return this.formatMoney(amount) + ' CFA';
+                },
+                
+                changeAmount() {
+                    const change = this.parseMoney(this.paid) - this.netTotal;
+                    return this.formatMoney(change > 0 ? change : 0) + ' CFA';
+                },
+
                 totalQuantity: function () {
                     return _.reduce(this.selectedProducts, function(result, product) {
                         return result + parseInt(product.sell_quantity)
@@ -359,18 +385,31 @@
 
             },
             methods:{
-                addQuantity: function(product) {
-                    product.sell_quantity += 1;
+                resetSale() {
+                    // Reset sale related data
+                    this.selectedProducts = {}
+                    this.paid = 0
+                    this.discount = 0
+                    this.barcode = ''
                 },
-                decrementQuantity: function(product) {
-                    if (product.sell_quantity > 0) {
-                        product.sell_quantity -= 1;
+                // Debounce for better performance
+                addQuantity: _.debounce(function(product) {
+                    // Validate before adding quantity
+                    if (product.sell_quantity < product.quantity) {
+                        this.addToSelected(product, 1, false)
+                    } else {
+                        swal("Stock Limit", "Quantité maximale atteinte", "warning")
                     }
-                },
-                addQuantity: function (product) {
-                    var quantityToAdd = parseInt(product.sell_quantity)
-                    this.addToSelected(product, quantityToAdd, true)
-                },
+                }, 100),
+
+                decrementQuantity: _.debounce(function(product) {
+                    if (product.sell_quantity > 0) {
+                        this.addToSelected(product, -1, false)
+                    } else {
+                        swal("Stock Limit", "Quantité minimal atteinte", "warning")
+                    }
+                }, 100),
+
                 resetClient: function () {
                     this.addCustomer = {
                         first_name: '',
@@ -382,6 +421,7 @@
                         client_type: 'retailer'
                     }
                 },
+                
                 postNewCustomer: function () {
                     var self = this
                     axios.post('/api/admin/customer/save', this.addCustomer)
@@ -469,30 +509,91 @@
                     this.selectedProducts = _.omit(this.selectedProducts, product.id)
                 },
 
-                postSell: function () {
-                    var self = this
-                    if(self.totalQuantity <= 0){
-                        swal("Sorry", "Please Select Product Before Payment ", "warning");
-                        return false;
-                    }
+                // Enhanced error handling
+                async postSell() {
 
-                    if(parseFloat(self.paid) < self.netTotal){
-                        swal("Sorry", "Paid amount can't be less than Net Total " + self.netTotal, "warning");
-                        return false;
-                    }
+                    try {
 
-                    axios.post('/admin/pos/sell/save', {customer: this.customer, sells: this.selectedProducts, paid: this.paid, method: this.paying_method, discount_amount: this.discountAmount, invoice_tax: this.invoiceTax, })
-                        .then(function (response) {
-                            swal('success', 'success', 'success')
-                            var transactionId = response.data.id
-                            window.location.href = 'pos/sell/invoice/' + transactionId;
-                            console.log(JSON.stringify(response))
+                        // Prevent multiple submissions
+                        if (this.isSubmitting) return
+
+                        // Flag to block further submissions
+                        this.isSubmitting = true
+
+                        if(this.totalQuantity <= 0) {
+                            return swal("Attention", "Veuillez sélectionner un produit", "warning")
+                        }
+
+                        if(parseFloat(this.paid) < this.netTotal) {
+                            return swal("Attention", `Le montant perçu doit être supérieur ou égal à ${this.netTotal} CFA`, "warning")
+                        }
+
+                        const response = await axios.post('/admin/pos/sell/save', {
+                            customer: this.customer, 
+                            sells: this.selectedProducts, 
+                            paid: this.paid, 
+                            method: this.paying_method, 
+                            discount_amount: this.discountAmount, 
+                            invoice_tax: this.invoiceTax
+                        }).then((response) => {
+                            swal('Succès', 'Vente effectuée', 'success')
+                            window.location.href = `pos/sell/invoice/${response.data.id}`
                         })
-                        .catch (function (response) {
-                            alert('error')
-                            console.log(JSON.stringify(response))
+                        .catch((error) => {
+                            swal('Erreur', 'Un problème est survenu lors de la vente', 'error')
+                            console.error(error)
                         })
+                        .finally(() => {
+                            // Always reset submission flag
+                            this.isSubmitting = false
+                        })
+
+                    } catch (error) {
+                        swal('Erreur', 'Un problème est survenu lors de la vente', 'error')
+                        console.error(error)
+                    } finally {
+                        // Always reset submission flag
+                        this.isSubmitting = false
+                    }
                 },
+
+                parseMoney(value) {
+                    // Convertit une chaîne formatée en nombre
+                    return parseFloat(
+                        String(value)
+                        .replace(/\s/g, '')
+                        .replace(',', '.')
+                    ) || 0;
+                },
+
+                formatMoney(value) {
+                    // Convertit un nombre en format français
+                    return new Intl.NumberFormat('fr-FR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    }).format(value || 0);
+                },
+
+                formatMoneyInput(event) {
+                    let input = event.target;
+                    let value = input.value.replace(/[^\d,]/g, '');
+                    
+                    // Gestion des virgules
+                    value = value.replace(/,{2,}/g, ',');
+                    
+                    let parts = value.split(',');
+                    if (parts.length > 2) {
+                        value = parts[0] + ',' + parts.slice(1).join('');
+                    }
+                    
+                    // Limite à 2 décimales
+                    if (parts.length === 2) {
+                        parts[1] = parts[1].slice(0, 2);
+                        value = parts.join(',');
+                    }
+                    
+                    input.value = value;
+                }
 
             },
 
@@ -501,6 +602,12 @@
                 document.getElementById("app").style.display = "block";
                 this.loadClients()
                 this.loadProducts('all')
+
+                // Ajouter l'écouteur d'événement pour le formatage des inputs
+                const moneyInputs = document.querySelectorAll('.money-input');
+                moneyInputs.forEach(input => {
+                    input.addEventListener('input', this.formatMoneyInput);
+                });
             }
         });
     </script>

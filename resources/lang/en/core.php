@@ -42,7 +42,7 @@ return [
     'backup' => 'Backup',
     'back' => 'Back',
     'bill' => 'Bill',
-    'biller' => 'Biller',
+    'biller' => 'Caisier',
     'bill_no' => 'Bill No',
     'bill_info' => 'Bill Info',
     'bill_list' => 'Bill List',

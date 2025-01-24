@@ -1,0 +1,598 @@
+@extends('layouts.pos')
+
+@section('title')
+    @parent
+@stop
+
+@section('css')
+<style>
+    .glassmorphism {
+        @apply bg-white/90 backdrop-blur-xl border border-white/30 shadow-lg;
+    }
+    
+    .custom-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: #E2E8F0 #F8FAFC;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar {
+        @apply w-1.5;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-track {
+        @apply bg-gray-100/50 rounded-full;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        @apply bg-gray-300/80 rounded-full hover:bg-gray-400 transition-colors;
+    }
+
+    .shimmer {
+        background: linear-gradient(90deg, 
+            rgba(255,255,255,0) 0%, 
+            rgba(255,255,255,0.6) 50%, 
+            rgba(255,255,255,0) 100%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+
+    .fade-enter-active, .fade-leave-active {
+        transition: all 0.3s ease;
+    }
+    
+    .fade-enter-from, .fade-leave-to {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+</style>
+@stop
+
+@section('main-content')
+    <!-- Enhanced Loading Screen -->
+    <div id="loader_page" class="fixed inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 z-50">
+        <div class="relative w-24 h-24">
+            <div class="absolute inset-0 border-8 border-blue-200/50 rounded-full animate-ping"></div>
+            <div class="absolute inset-2 border-4 border-blue-500 rounded-full animate-spin"></div>
+        </div>
+        <p class="mt-6 text-gray-600 font-medium animate-pulse">Chargement du système...</p>
+    </div>
+
+    <!-- Main Application -->
+    <div id="app" class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-6">
+        <div class="container mx-auto px-4 lg:px-8">
+
+            <!-- Main Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Products Section -->
+                <div class="lg:col-span-2" style="border: 1px solid #ddd;">
+                    <div class="glassmorphism rounded-3xl overflow-hidden">
+                        <!-- Search and Categories -->
+                        <div class="p-6 border-b border-gray-100/80">
+                            <div class="flex flex-col md:flex-row gap-4">
+                                <!-- Search Bar with Animation -->
+                                <div class="relative flex-1 group">
+                                    <input 
+                                        type="text" 
+                                        class="w-full h-12 pl-12 pr-4 rounded-xl bg-gray-50/80 border-2 border-gray-100 group-hover:border-blue-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300"
+                                        placeholder="Rechercher un produit..." 
+                                        v-model="search" 
+                                        @keyup.prevent="getProductBySearch"
+                                    />
+                                    <i class="fa fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-blue-500 transition-colors"></i>
+                                </div>
+                                
+                                <!-- Quick Filters -->
+                                <div class="flex gap-2">
+                                    <button class="px-4 py-2 rounded-xl font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors">
+                                        <i class="fa fa-tag mr-2"></i>Promotions
+                                    </button>
+                                    <button class="px-4 py-2 rounded-xl font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
+                                        <i class="fa fa-clock mr-2"></i>Récents
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Products Grid -->
+                        <div class="p-6">
+                            <!-- Loading State -->
+                            <div v-if="loading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                <div v-for="n in 8" :key="n" class="animate-pulse">
+                                    <div class="aspect-square bg-gray-200/80 rounded-xl mb-4"></div>
+                                    <div class="h-4 bg-gray-200/80 rounded-full w-3/4 mb-2"></div>
+                                    <div class="h-4 bg-gray-200/80 rounded-full w-1/2"></div>
+                                </div>
+                            </div>
+
+                            <!-- Products Grid with Enhanced Hover Effects -->
+                            <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                <div 
+                                    v-for="product in products" 
+                                    :key="product.id" 
+                                    @click.prevent="addToSelected(product)"
+                                    class="group relative bg-white rounded-2xl border border-gray-100 p-4 cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:border-blue-200"
+                                >
+                                    <!-- Enhanced Quick Actions -->
+                                    <div class="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+                                        <button 
+                                            class="w-8 h-8 flex items-center justify-center bg-blue-100 rounded-lg text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-300"
+                                            @click.stop="quickView(product)"
+                                        >
+                                            <i class="fa fa-eye"></i>
+                                        </button>
+                                        <button 
+                                            class="w-8 h-8 flex items-center justify-center bg-green-100 rounded-lg text-green-600 hover:bg-green-600 hover:text-white transition-all duration-300"
+                                            @click.stop="quickAdd(product)"
+                                        >
+                                            <i class="fa fa-plus"></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- Enhanced Stock Badge -->
+                                    <div 
+                                        :class="['absolute top-2 left-2 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-300',
+                                                product.quantity > 20 
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : product.quantity > 5
+                                                        ? 'bg-orange-100 text-orange-700'
+                                                        : 'bg-red-100 text-red-700']"
+                                    >
+                                        <i class="fa fa-box mr-1"></i>@{{ product.quantity }}
+                                    </div>
+
+                                    <!-- Product Image with Enhanced Hover -->
+                                    <div class="aspect-square mb-4 flex items-center justify-center p-4 bg-gray-50/50 rounded-xl group-hover:bg-blue-50/50 transition-colors">
+                                        <img 
+                                            :src="product.image ? '/uploads/products/' + product.image : '{{ asset('uploads/products/8NKeIGlWVSCE.png') }}'"
+                                            class="max-h-full max-w-full object-contain transition-transform duration-500 group-hover:scale-110"
+                                            :alt="product.name"
+                                        >
+                                    </div>
+
+                                    <!-- Enhanced Product Details -->
+                                    <div>
+                                        <h3 class="font-medium text-gray-800 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                                            @{{ product.name }}
+                                        </h3>
+                                        <div class="flex items-center justify-between mt-2">
+                                            <p class="text-lg font-bold text-blue-600">
+                                                @{{ product.mrp }} CFA
+                                            </p>
+                                            <span class="text-sm text-gray-500">
+                                                #@{{ product.code }}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Add to Cart Overlay -->
+                                    <div class="absolute inset-0 bg-blue-500/0 flex items-center justify-center rounded-2xl opacity-0 group-hover:opacity-100 group-hover:bg-blue-500/10 transition-all duration-300">
+                                        <button class="px-4 py-2 bg-blue-500 text-white rounded-lg transform scale-75 group-hover:scale-100 transition-all duration-300">
+                                            Ajouter au panier
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enhanced Cart Section -->
+                <div class="lg:col-span-1">
+                    <div class="glassmorphism rounded-3xl h-[calc(100vh-13rem)] flex flex-col" style="border: 1px solid #ddd;">
+                        <!-- Cart Header -->
+                        <div class="p-6 border-b border-gray-100/80">
+                            <div class="flex flex-col gap-4">
+                                <!-- Enhanced Customer Selection -->
+                                <div class="flex gap-4">
+                                    <select 
+                                        class="flex-1 h-12 px-4 rounded-xl bg-gray-50/80 border-2 border-gray-100 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all"
+                                        v-model="customer"
+                                    >
+                                        <option v-for="customerData in customers" :value="customerData.id">
+                                            @{{ customerData.first_name + ' ' + customerData.last_name }}
+                                        </option>
+                                    </select>
+                                    <button 
+                                        type="button"
+                                        class="h-12 w-12 flex items-center justify-center bg-blue-500 text-white rounded-xl hover:bg-blue-600 focus:ring-4 focus:ring-blue-100 transition-all"
+                                        data-toggle="modal"
+                                        data-target="#customerModal"
+                                    >
+                                        <i class="fa fa-plus"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Enhanced Barcode Scanner -->
+                                <div class="relative group">
+                                    <input 
+                                        type="text"
+                                        class="w-full h-12 pl-12 pr-4 rounded-xl bg-gray-50/80 border-2 border-gray-100 group-hover:border-blue-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all"
+                                        v-model="barcode"
+                                        @keyup.prevent="getProductByBarcode"
+                                        placeholder="Scanner un code-barres"
+                                        ref="barcodeInput"  
+                                        autofocus 
+                                    />
+                                    <i class="fa fa-barcode absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-blue-500 transition-colors"></i>
+                                </div>
+                                
+                            </div>
+                        </div>
+
+                        <!-- Cart Items -->
+                        <div class="flex-2 overflow-y-auto custom-scrollbar p-6 shadow-md mb-6" style="max-height: 300px;">
+                            <transition-group name="fade">
+                                <div 
+                                    v-for="product in selectedProducts" 
+                                    :key="product.uuid"
+                                    class="group bg-gray-50 rounded-xl p-4 mb-4 last:mb-0 hover:bg-blue-50 transition-colors"
+                                >
+                                    <div class="flex items-start gap-4">
+                                        <!-- Product Image -->
+                                        <img 
+                                            :src="product.image ? '/uploads/products/' + product.image : '{{ asset('uploads/products/8NKeIGlWVSCE.png') }}'"
+                                            class="w-16 h-16 object-cover rounded-lg"
+                                            :alt="product.name"
+                                        >
+                                        
+                                        <!-- Product Details -->
+                                        <div class="flex-1">
+                                            <h4 class="font-medium text-gray-800">@{{ product.name }}</h4>
+                                            <p class="text-sm text-gray-500">Réf: @{{ product.code }}</p>
+                                            <div class="mt-2 flex items-center justify-between">
+                                                <p class="font-medium text-blue-600">@{{ product.mrp }} CFA</p>
+                                                <div class="flex items-center gap-3">
+                                                    <button 
+                                                        type="button"
+                                                        class="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-gray-200 hover:bg-blue-500 hover:text-white transition-colors"
+                                                        @click="decrementQuantity(product)"
+                                                    >-</button>
+                                                    <span class="w-8 text-center font-medium">@{{ product.sell_quantity }}</span>
+                                            
+                                                    <button 
+                                                        type="button"
+                                                        class="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-gray-200 hover:bg-blue-500 hover:text-white transition-colors"
+                                                        @click="addQuantity(product)"
+                                                    >+</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Remove Button -->
+                                        <button 
+                                            @click.prevent="removeFromSelected(product)"
+                                            class="w-8 h-8 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-500 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+                                        >
+                                            <i class="fa fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </transition-group>
+
+                            <!-- Empty Cart State -->
+                            <div v-if="!selectedProducts.length" class="h-full flex flex-col items-center justify-center text-center p-6">
+                                <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                    <i class="fa fa-shopping-cart text-3xl text-gray-400"></i>
+                                </div>
+                                <h3 class="text-lg font-medium text-gray-800 mb-2">Votre panier est vide</h3>
+                                <p class="text-gray-500">Ajoutez des produits pour commencer</p>
+                            </div>
+                        </div>
+
+                        <!-- Enhanced Cart Summary -->
+                        <div class="p-6 bg-gray-50 border-t border-gray-100">
+                            <!-- Calculations -->
+                            <div class="space-y-3 mb-6">
+                                <!-- Subtotal -->
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-gray-600">Sous-total</span>
+                                    <span class="font-medium text-gray-800">@{{ subTotal }} CFA</span>
+                                </div>
+
+                                <!-- Enhanced Discount Input -->
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-600">Remise</span>
+                                    <div class="relative w-32">
+                                        <input 
+                                            type="number"
+                                            v-model="discount"
+                                            class="w-full h-9 px-3 pr-12 text-right rounded-lg border-2 border-gray-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                            placeholder="0"
+                                        />
+                                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">CFA</span>
+                                    </div>
+                                </div>
+
+                                <!-- Total with animation -->
+                                <div class="pt-3 border-t border-gray-200">
+                                    <div class="flex justify-between items-center text-lg font-bold">
+                                        <span class="text-gray-800">Total</span>
+                                        <span class="text-blue-600">@{{ netTotal }} CFA</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Enhanced Payment Section -->
+                            <div class="bg-white rounded-xl p-4 mb-6 border border-gray-100">
+                                <div class="space-y-3">
+                                    <!-- Payment Input -->
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-600">Montant reçu</span>
+                                        <div class="relative w-32">
+                                            <input 
+                                                type="number"
+                                                v-model="paid"
+                                                class="w-full h-9 px-3 pr-12 text-right rounded-lg border-2 border-gray-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                                placeholder="0"
+                                            />
+                                            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">CFA</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Change Amount -->
+                                    <div class="flex justify-between items-center pt-2 border-t border-gray-100">
+                                        <span class="text-gray-600">Monnaie</span>
+                                        <span class="font-medium text-green-600">@{{ paid - netTotal > 0 ? paid - netTotal : 0 }} CFA</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <button 
+                                    type="button"
+                                    class="h-11 px-6 bg-gray-100 text-gray-600 rounded-xl font-medium hover:bg-gray-200 focus:ring-4 focus:ring-gray-100 transition-all disabled:opacity-50"
+                                    :disabled="!selectedProducts.length"
+                                >
+                                    <i class="fa fa-times mr-2"></i>Annuler
+                                </button>
+                                <button 
+                                    type="button"
+                                    class="h-11 px-6 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 focus:ring-4 focus:ring-blue-100 transition-all disabled:opacity-50"
+                                    :disabled="!selectedProducts.length || netTotal > paid"
+                                >
+                                    <i class="fa fa-check mr-2"></i>Payer
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@stop
+
+
+@section('js')
+    @parent
+    <script src="/assets/js-core/lodash.js"></script>
+    <script src="/assets/js-core/vue.js"></script>
+    <script src="/assets/js-core/axios.min.js"></script>
+    <script>
+        axios.defaults.headers.common['X-CSRF-TOKEN'] = window.Laravel.csrfToken;
+        axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+
+        var app = new Vue({
+            el: '#app',
+            data: {
+                customers: [],
+                customer: '1',
+                addCustomer: {
+                    first_name: '',
+                    last_name: '',
+                    email: '',
+                    phone: '',
+                    address: '',
+                    company_name: '',
+                    client_type: 'retailer'
+                },
+                products: [],
+                selectedProducts: {},
+                selectedProduct: {},
+                categories: {},
+                barcode: '',
+                discount: 0,
+                enableInvoiceTax: {{ settings('invoice_tax') ?: 0 }},
+                invoice_tax_rate: {{ settings('invoice_tax_rate') ?: 0 }},
+                invoice_tax_type: {{ settings('invoice_tax_type') ?: 2 }},
+                paid: 0,
+                paying_method: 'cash',
+                reference_no: '',
+                search: '',
+                loading: false,
+            },
+            computed: {
+                totalQuantity: function () {
+                    return _.reduce(this.selectedProducts, function(result, product) {
+                        return result + parseInt(product.sell_quantity)
+                    }, 0)
+                },
+
+                subTotal: function () {
+                    subtotal = _.reduce(this.selectedProducts, function(result, product) {
+                        return result + parseFloat(product.mrp) * parseFloat(product.sell_quantity)
+                    }, 0)
+                    return subtotal.toFixed(2)
+                },
+                discountAmount: function () {
+                    var discountAmount = this.discount
+                    var isPercentage = (this.discount.toString().indexOf('%') !== -1) ? true : false
+                    if(isPercentage) {
+                        var amount = discountAmount.replace("%", "");
+                        discountAmount = this.subTotal * (1 * amount / 100)
+                    }
+                    return discountAmount
+                },
+
+                invoiceTax: function () {
+                    var invoice_tax_amount = 0
+                    if(this.enableInvoiceTax == 1){
+
+                        //check if tax type is percentage(1) or fixed (2)
+                        if(this.invoice_tax_type == 1){
+                            invoice_tax_amount = (this.invoice_tax_rate * (this.subTotal - this.discountAmount)) / 100
+                        }else{
+                            invoice_tax_amount = this.invoice_tax_rate
+                        }
+                    }
+                    return invoice_tax_amount
+                },
+
+                netTotal: function () {
+                    return parseFloat((this.subTotal + this.invoiceTax) - this.discountAmount).toFixed(2)
+                },
+
+            },
+            methods:{
+                addQuantity: function(product) {
+                    product.sell_quantity += 1;
+                },
+                decrementQuantity: function(product) {
+                    if (product.sell_quantity > 0) {
+                        product.sell_quantity -= 1;
+                    }
+                },
+                addQuantity: function (product) {
+                    var quantityToAdd = parseInt(product.sell_quantity)
+                    this.addToSelected(product, quantityToAdd, true)
+                },
+                resetClient: function () {
+                    this.addCustomer = {
+                        first_name: '',
+                        last_name: '',
+                        email: '',
+                        phone: '',
+                        address: '',
+                        company_name: '',
+                        client_type: 'retailer'
+                    }
+                },
+                postNewCustomer: function () {
+                    var self = this
+                    axios.post('/api/admin/customer/save', this.addCustomer)
+                        .then(function (response) {
+                            console.log(JSON.stringify(response))
+                            self.loadClients()
+                            self.resetClient()
+                            $(self.$refs.customerModalClose).trigger('click')
+                        })
+                        .catch (function (response) {
+                            console.log(JSON.stringify(response))
+                        })
+                },
+                loadClients: function () {
+                    var self = this
+                    axios.get('/api/admin/client').then(function (response) {
+                        self.customers = response.data
+                    }, function (response) {
+                        console.log(response)
+                    })
+                },
+                loadProducts: function (data) {
+                    var self = this
+                    self.loading = true;
+                    self.products = []
+                    var getUrl = (data === 'all') ?
+                                '/api/admin/products' :
+                                '/api/admin/category/' + data + '/products'
+                    axios.get(getUrl)
+                        .then(function (response) {
+                            self.products = response.data
+                            self.loading = false
+                        })
+                        .catch(function (response) {
+                            console.log(JSON.stringify(response))
+                        })
+                },
+
+                getProductBySearch: function () {
+                    var self = this
+                    self.loading = true;
+                    self.products = []
+                    var searchUrl = '/api/admin/product-by-search/' + self.search
+                    axios.get(searchUrl)
+                        .then(function (response) {
+                            self.products = response.data
+                            self.loading = false
+                        })
+                        .catch(function (response) {
+                            console.log(JSON.stringify(response))
+                    })
+                },
+
+                getProductByBarcode: _.debounce(function () {
+                    var self = this
+                    axios.get('/api/admin/product-by-barcode/' + self.barcode)
+                        .then(function (response) {
+                            if (response.data.found === true) {
+                                self.addToSelected(response.data.product)
+                                self.barcode = ''
+                            }
+                        })
+                        .catch(function (response) {
+                            console.log(JSON.stringify(response))
+                        })
+                }, 300),
+
+                addToSelected: function (product, quantityToAdd = 1, fresh = false) {
+                    var exists = this.selectedProducts[product.id]
+                    if (fresh) {
+                        product.sell_quantity = 0
+                    }
+                    if (exists !== undefined) {
+                        product.sell_quantity = parseInt(this.selectedProducts[product.id].sell_quantity) + quantityToAdd
+                        product.uuid = _.uniqueId('product_')
+                        this.selectedProducts = _.omit(this.selectedProducts, product.id)
+                        this.$set(this.selectedProducts, product.id, product)
+                    } else {
+                        product['sell_quantity'] = 1
+                        product['uuid'] = _.uniqueId('product_')
+                        this.$set(this.selectedProducts, product.id, product)
+                    }
+                },
+                removeFromSelected: function (product) {
+                    this.selectedProducts = _.omit(this.selectedProducts, product.id)
+                },
+
+                postSell: function () {
+                    var self = this
+                    if(self.totalQuantity <= 0){
+                        swal("Sorry", "Please Select Product Before Payment ", "warning");
+                        return false;
+                    }
+
+                    if(parseFloat(self.paid) < self.netTotal){
+                        swal("Sorry", "Paid amount can't be less than Net Total " + self.netTotal, "warning");
+                        return false;
+                    }
+
+                    axios.post('/admin/pos/sell/save', {customer: this.customer, sells: this.selectedProducts, paid: this.paid, method: this.paying_method, discount_amount: this.discountAmount, invoice_tax: this.invoiceTax, })
+                        .then(function (response) {
+                            swal('success', 'success', 'success')
+                            var transactionId = response.data.id
+                            window.location.href = 'pos/sell/invoice/' + transactionId;
+                            console.log(JSON.stringify(response))
+                        })
+                        .catch (function (response) {
+                            alert('error')
+                            console.log(JSON.stringify(response))
+                        })
+                },
+
+            },
+
+            mounted: function () {
+                document.getElementById("loader_page").style.display = "none";
+                document.getElementById("app").style.display = "block";
+                this.loadClients()
+                this.loadProducts('all')
+            }
+        });
+    </script>
+@stop

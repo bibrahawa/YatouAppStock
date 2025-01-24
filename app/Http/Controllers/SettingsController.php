@@ -40,11 +40,23 @@ class SettingsController extends Controller
         }
 
         $setting = Setting::findOrFail(1);
-        $setting->fill($request->only([
-            'site_name', 'slogan', 'address', 'email', 'phone', 'owner_name', 
-            'currency_code', 'theme', 'enable_purchaser', 'enable_customer', 
-            'vat_no', 'pos_invoice_footer_text', 'dashboard_style'
-        ]));
+        
+        $setting->fill([
+            'site_name' => $request->site_name,
+            'slogan' => $request->slogan,
+            'address' => $request->address,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'owner_name' => $request->owner_name,
+            'currency_code' => $request->currency_code,
+            'theme' => $request->theme,
+            'enable_purchaser' => $request->enable_purchaser,
+            'enable_customer' => $request->enable_customer,
+            'vat_no' => $request->vat_no,
+            'pos_invoice_footer_text' => $request->pos_invoice_footer_text,
+            'dashboard' => $request->dashboard_style,
+        ]);
+
         $setting->product_tax = 0;
         $setting->invoice_tax = $request->get('invoice_tax') ? 1 : 0;
         $setting->invoice_tax_rate = $request->get('invoice_tax_id') ? Tax::find($request->get('invoice_tax_id'))->rate : 0;
@@ -63,7 +75,7 @@ class SettingsController extends Controller
             $file->move($destination_path, $file_name);
             $setting->site_logo = $file_name;
         }
-
+        
         $setting->save();
         return redirect()->back()->with('success', trans('core.changes_saved'));
     }

@@ -10,61 +10,90 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\ProductCollection;
 
-
 class ProductsController extends Controller
 {
-    public function getFrequent (Request $request) {
+    /**
+     * Get frequent products
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function getFrequent(Request $request)
+    {
         $start = Carbon::now()->startOfMonth();
         $end = Carbon::now()->endOfMonth();
 
         $products = Product::whereHas('sells', function ($query) use ($start, $end) {
-            $query->whereBetween('created_at', [$start, $end]);
+            $query->whereBetween('created_at', [$start, $end])
+                ->selectRaw('product_id, count(*) as sells')
+                ->groupBy('product_id')
+                ->orderBy('sells', 'desc');
         })->take(25)->get();
-
-
 
         if (count($products) == 0) {
             $products = Product::latest()->take(25)->get();
         }
 
         return response()->json($products);
-
-    	// return  new ProductCollection($products);
     }
 
-    public function getCategoryProducts (Category $category, Request $request) {
-    	$products = $category->product()->orderBy('name', 'asc')->get();
-    	// return new ProductCollection($products);
+    /**
+     * Get products by category
+     *
+     * @param  \App\Models\Category  $category
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function getCategoryProducts(Category $category, Request $request)
+    {
+        $products = $category->products()->orderBy('name', 'asc')->get();
+
         return response()->json($products);
     }
 
-    public function getProductByBarcode (Request $request, $barcode) {
-    	$product = Product::where('code', $barcode)->first();
-    	$found = $product ? true : false;
-    	$data = $found ? new ProductResource($product) : [];
+    /**
+     * Get product by barcode
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  string  $barcode
+     * @return \Illuminate\Http\Response
+     */
+    public function getProductByBarcode(Request $request, $barcode)
+    {
+        $product = Product::where('code', $barcode)->first();
 
-    	return response()->json(['found' => $found, 'product' => $data]);
+        $found = (bool) $product;
+
+        $data = $found ? $product : [];
+
+        return response()->json([
+            'found' => $found,
+            'product' => $data,
+        ]);
     }
 
-
-    public function getProductBySearch (Request $request, $search) {
+    /**
+     * Get product by search
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  string  $search
+     * @return \Illuminate\Http\Response
+     */
+    public function getProductBySearch(Request $request, $search)
+    {
         $products = Product::orderBy('name', 'asc');
 
-        $products->where(function($q) use($search) {
+        $products->where(function ($q) use ($search) {
             $q->where('name', 'LIKE', '%' . $search . '%');
         });
 
         $found = $products->count() > 0 ? "yes" : "no";
 
-        if($found == "no"){
-            $products = Product::orderBy('name', 'asc')->where('code','LIKE', '%' . $search . '%');
+        if ($found == "no") {
+            $products = Product::orderBy('name', 'asc')->where('code', 'LIKE', '%' . $search . '%');
         }
 
-        
-        // return new ProductCollection($products->get());
         return response()->json($products->get());
     }
-
-
-
 }
+

@@ -20,13 +20,10 @@
 			        	<b>{{settings('site_name')}}</b>
 			        </h2>
 			        <p> 
-			            {{trans('core.address')}}: 
 			            {{settings('address')}}
 			            <br>
-			            {{trans('core.email')}}: 
 			            {{settings('email')}}
 			            <br>
-			            {{trans('core.phone')}}: 
 			            {{settings('phone')}}
 			            <br><br>
 			        </p>
@@ -49,23 +46,23 @@
 			    </div>
 			</div>
 			<!--End InvoiceTop-->
-		      
+	      
 	    
 	    	<div id="bot">
 				<div id="table">
 					<table class="table table-bordered">
 						<tr class="tabletitle" >
 							<td>
-								<span class="table-header">Item</span>
+								<span class="table-header">Produit</span>
 							</td>
 							<td>
-								<span class="table-header">Qty</span>
+								<span class="table-header">Qte</span>
 							</td>
 							<td>
-								<span class="table-header">Price</span>
+								<span class="table-header">Prix</span>
 							</td>
 							<td>
-								<span class="table-header">Sub Total</span>
+								<span class="table-header">{{trans('core.sub_total')}}</span>
 							</td>
 						</tr>
 
@@ -80,7 +77,7 @@
 							<td class="tableitem">
 								<p class="itemtext">
 									@if($sell->quantity > 0)
-										{{$sell->sub_total / $sell->quantity}}
+										{{number_format($sell->sub_total / $sell->quantity)}}
 									@else
 										0
 									@endif
@@ -88,8 +85,7 @@
 							</td>
 							<td class="tableitem">
 								<p class="itemtext">
-									<!-- {{settings('currency_code')}} -->
-									{{$sell->sub_total}}
+									{{number_format($sell->sub_total)}}
 								</p>
 							</td>
 						</tr>
@@ -101,8 +97,7 @@
 							</td>
 							<td class="payment">
 								<span class="table-footer">
-									<!-- {{settings('currency_code')}} -->
-									{{$transaction->total + $transaction->discount}}
+									{{number_format($transaction->total + $transaction->discount)}}
 								</span class="table-footer">
 							</td>
 						</tr>
@@ -113,8 +108,7 @@
 							</td>
 							<td class="payment">
 								<span class="table-footer">
-									<!-- {{settings('currency_code')}} -->
-									{{$transaction->discount}}
+									{{number_format($transaction->discount)}}
 								</span class="table-footer">
 							</td>
 						</tr>
@@ -126,8 +120,7 @@
 							</td>
 							<td class="payment">
 								<span class="table-footer">
-									<!-- {{settings('currency_code')}} -->
-									{{$transaction->net_total}}
+									{{number_format($transaction->net_total)}}
 								</span class="table-footer">
 							</td>
 						</tr>
@@ -139,8 +132,7 @@
 							</td>
 							<td class="payment">
 								<span class="table-footer">
-									<!-- {{settings('currency_code')}} -->
-									{{$transaction->net_total}}
+									{{number_format($transaction->net_total)}}
 								</span class="table-footer">
 							</td>
 						</tr>
@@ -151,8 +143,7 @@
 							</td>
 							<td class="payment">
 								<span class="table-footer">
-									<!-- {{settings('currency_code')}} -->
-									{{$transaction->paid + $transaction->change_amount}}
+									{{number_format($transaction->paid + $transaction->change_amount)}}
 								</span class="table-footer">
 							</td>
 						</tr>
@@ -164,8 +155,7 @@
 							</td>
 							<td class="payment">
 								<span class="table-footer">
-									<!-- {{settings('currency_code')}} -->
-									{{$transaction->change_amount}}
+									{{number_format($transaction->change_amount)}}
 								</span class="table-footer">
 							</td>
 						</tr>
@@ -176,7 +166,7 @@
 
 				<div id="legalcopy" style="padding-bottom: 10px;">
 					<span class="table-footer">
-						<strong>Thank you for shopping!</strong>  
+						<strong>{{trans('core.thank_you_for_shopping')}}</strong>  
 						<br>
 						 {{settings('pos_invoice_footer_text')}}
 					</span>
@@ -184,27 +174,23 @@
 
 			</div><!--End InvoiceBot-->
 
-			<div style="text-align: center;  font-size: 10px; color: black;">
-				A Software By Intelle Hub Inc.
-				<br>
-				+880 1674871091, info@intelle-hub.com
-			</div>
 	  	</div><!--End Invoice-->
   	</div> <!--Printable Div Ends-->
 
   	<div class="invoice-pos-footer">
   		<div class="row">
+			
+			<div class="col-md-6">
+				<a class="btn btn-danger btn-block" href="{{route('sell.pos')}}">
+					<i class="fa fa-backward"></i>
+					{{trans('core.back')}}
+				</a>
+			</div>
+
   			<div class="col-md-6">
   				<a class="btn btn-success btn-block" onclick="printDiv('printableArea')" >
   					{{trans('core.print')}}
   					<i class="fa fa-print"></i>
-  				</a>
-  			</div>
-
-  			<div class="col-md-6">
-  				<a class="btn btn-danger btn-block" href="{{route('sell.pos')}}">
-  					<i class="fa fa-backward"></i>
-  					{{trans('core.back')}}
   				</a>
   			</div>
   		</div>
@@ -223,6 +209,5 @@
             document.body.innerHTML = originalContents;
         }
 	</script>
-
 
 @stop

@@ -1,101 +1,83 @@
-<div class="modal fade" id="paymentModal" tabindex="-1" role="dialog" aria-labelledby="paymentModalLabel" aria-hidden="true">
-	<div class="modal-dialog modal-lg" role="document">
-	  <div class="modal-content" style="border-radius: 10px;">
-		<div class="modal-header" style="background-color: #007bff; color: white; border-radius: 10px 10px 0 0;">
-		  <h5 class="modal-title" id="paymentModalLabel">Finalize Sale</h5>
-		  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-			<span aria-hidden="true">&times;</span>
-		  </button>
-		</div>
-		<div class="modal-body">
-		  <!-- Payment Form -->
-		  <div class="payment-form">
-			<div class="row">
-			  <div class="col-md-6 mb-3">
-				<label for="paid">Amount Paid</label>
-				<input type="text" v-model="paid" id="paid" class="form-control" placeholder="Enter amount" style="border-radius: 8px;">
-			  </div>
-			  <div class="col-md-6 mb-3">
-				<label for="paying_method">Paying By</label>
-				<select id="paying_method" v-model="paying_method" class="form-control" style="border-radius: 8px;">
-				  <option value="cash">Cash</option>
-				  <option value="card">Card</option>
-				  <option value="mobile_money">Mobile Money</option>
-				</select>
-			  </div>
-			</div>
-		  </div>
-  
-		  <div class="cart-summary" style="background-color: #f9f9f9; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-			<div class="row">
-			  <div class="col-md-12">
-				<h5 style="font-weight: bold; color: #333; text-align: center;">Transaction Summary</h5>
-			  </div>
-			</div>
-			
-			<!-- Total Items & Total Payable -->
-			<div class="row" style="margin-bottom: 15px;">
-			  <div class="col-md-6">
-				<div style="font-size: 16px; font-weight: bold; color: #555;">Total Items: <span style="font-weight: normal; color: #777;">@{{ totalQuantity }}</span></div>
-			  </div>
-			  <div class="col-md-6">
-				<div style="font-size: 16px; font-weight: bold; color: #555;">Total Payable: <span style="font-weight: normal; color: #777;">@{{ netTotal | currency }}</span></div>
-			  </div>
-			</div>
-		  
-			<hr>
-		  
-			<!-- Due and Change Amount -->
-			<div class="row">
-			  <div class="col-md-6">
-				<div class="d-flex justify-content-between align-items-center" style="color: #E74C3C; font-weight: bold;">
-				  <span>Amount Due:</span>
-				  <span>@{{ (netTotal - paid) >= 0 ? (netTotal - paid | currency) : '0' }}</span>
-				</div>
-			  </div>
-			  <div class="col-md-6">
-				<div class="d-flex justify-content-between align-items-center" style="color: #27AE60; font-weight: bold;">
-				  <span>Change:</span>
-				  <span>@{{ (paid - netTotal) >= 0 ? (paid - netTotal | currency) : '0' }}</span>
-				</div>
-			  </div>
-			</div>
-		  
-			<hr>
-		  
-			<!-- Paying Method -->
-			<div class="row">
-			  <div class="col-md-12">
-				<label for="paying-method" style="font-weight: bold;">Paying Method:</label>
-				<select id="paying-method" v-model="paying_method" class="form-control" style="border-radius: 5px;">
-				  <option value="cash">{{ trans('core.cash') }}</option>
-				  <option value="card">{{ trans('core.card') }}</option>
-				  <option value="cash + card">{{ trans('core.cash-plus-card') }}</option>
-				  <option value="mobile_money">{{ trans('core.mobile-money') }}</option>
-				  <option value="others">{{ trans('core.others') }}</option>
-				</select>
-			  </div>
-			</div>
-		  
-			<!-- Submit Button -->
-			<div class="row" style="margin-top: 20px;">
-			  <div class="col-md-12">
-				<button class="btn btn-primary btn-block" @click.prevent="postSell" style="border-radius: 5px; font-size: 16px;">
-				  Submit Payment
-				</button>
-			  </div>
-			</div>
-		  </div>
-		  
+<div class="modal fade" id="paymentModal" tabindex="-1" role="dialog" aria-labelledby="paymentModalLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content rounded-lg shadow-xl">
+            <div class="modal-header bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-t-lg p-4">
+                <h5 class="modal-title text-xl font-bold" id="paymentModalLabel">
+                    <i class="fa fa-shopping-cart mr-3"></i>Finaliser la Vente
+                </h5>
+                <button type="button" class="close text-white opacity-75 hover:opacity-100" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-6">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Payment Details Column -->
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">Montant Payé</label>
+                            <div class="relative">
+                                <input 
+                                    type="number" 
+                                    v-model="paid" 
+                                    class="w-full h-12 px-4 pr-12 text-lg border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                    placeholder="Entrer le montant"
+                                />
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">CFA</span>
+                            </div>
+                        </div>
 
-		</div>
-		<div class="modal-footer">
-		  <button class="btn btn-outline-secondary" data-dismiss="modal" style="border-radius: 8px;">Close</button>
-		  <button class="btn btn-primary btn-block" @click.prevent="postSell" style="border-radius: 8px;">
-			Submit Payment
-		  </button>
-		</div>
-	  </div>
-	</div>
-  </div>
-  
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">Méthode de Paiement</label>
+                            <select 
+                                v-model="paying_method" 
+                                class="w-full h-12 px-4 text-lg border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                            >
+                                <option value="cash">Espèces</option>
+                                <option value="card">Carte</option>
+                                <option value="mobile_money">Mobile Money</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Transaction Summary Column -->
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-5 space-y-4">
+                        <div class="text-center">
+                            <h5 class="text-xl font-bold text-gray-800 mb-4">Résumé de la Transaction</h5>
+                        </div>
+
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700 font-semibold">Total Articles</span>
+                            <span class="text-gray-900 font-bold">@{{ totalQuantity }}</span>
+                        </div>
+
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700 font-semibold">Total à Payer</span>
+                            <span class="text-blue-600 font-bold text-lg">@{{ netTotal }} CFA</span>
+                        </div>
+
+                        <div class="flex justify-between items-center text-green-600">
+                            <span class="font-semibold">Monnaie</span>
+                            <span class="font-bold">@{{ paid - netTotal > 0 ? (paid - netTotal).toFixed(2) : 0 }} CFA</span>
+                        </div>
+
+                        <div class="flex justify-between items-center text-red-600">
+                            <span class="font-semibold">Reste à Payer</span>
+                            <span class="font-bold">@{{ netTotal - paid > 0 ? (netTotal - paid).toFixed(2) : 0 }} CFA</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Button -->
+                <div class="mt-6">
+                    <button 
+                        @click.prevent="postSell"
+                        :disabled="isSubmitting"
+                        class="w-full h-14 bg-blue-600 text-white text-lg font-bold rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition-all disabled:opacity-50"
+                    >
+                        <i class="fa fa-check-circle mr-3"></i>Valider le Paiement
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

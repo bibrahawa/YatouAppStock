@@ -15,7 +15,7 @@ class AddPosInvoiceFooterToSettingsTable extends Migration
     {
         Schema::table('settings',function(Blueprint $table){
             $table->string('pos_invoice_footer_text')->after('vat_no')->nullable();
-            $table->string('dashboard')->after('pos_invoice_footer_text')->default('chart-box');
+            $table->string('dashboard')->after('pos_invoice_footer_text')->default('tile-box');
         });
     }
 
