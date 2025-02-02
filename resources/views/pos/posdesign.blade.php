@@ -37,15 +37,15 @@
                     <div class="panel panel-default" style="border: 1px solid #ddd;">
                         <div class="panel-body">
                             <div class="relative w-full">
-                                <input 
-                                    type="text" 
-                                    class="form-control border border-gray-300 rounded-lg pl-4 pr-12 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                                    placeholder="Search" 
-                                    v-model="search" 
+                                <input
+                                    type="text"
+                                    class="form-control border border-gray-300 rounded-lg pl-4 pr-12 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Search"
+                                    v-model="search"
                                     @keyup.prevent="getProductBySearch"
                                 />
-                                <i 
-                                    class="fa fa-refresh absolute top-1/2 right-4 transform -translate-y-1/2 text-gray-500 cursor-pointer" 
+                                <i
+                                    class="fa fa-refresh absolute top-1/2 right-4 transform -translate-y-1/2 text-gray-500 cursor-pointer"
                                     @click="loadProducts('all')">
                                 </i>
                             </div>
@@ -56,42 +56,42 @@
                                     <div class="w-5 h-5 bg-blue-200 rounded-full animate-bounce delay-400"></div>
                                 </div>
                             </div>
-                            
+
                             <div v-else class="min-h-[535px] bg-gray-50 py-6">
                                 <div role="allTab" class="tab-pane active" id="all">
                                     <div class="container mx-auto px-4">
                                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                                            <div 
-                                                v-for="product in products" 
-                                                :key="product.id" 
+                                            <div
+                                                v-for="product in products"
+                                                :key="product.id"
                                                 class="group relative flex flex-col items-center p-3 bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow transform hover:scale-105"
                                                 @click.prevent="addToSelected(product)"
                                             >
                                                 <!-- Badge Stock -->
-                                                <div 
+                                                <div
                                                     class="absolute top-2 right-1 px-5 py-3 text-sm font-semibold text-green-800 bg-green-200 rounded-full">
                                                     @{{ product.quantity }}
                                                 </div>
-                                                
+
                                                 <!-- Product Image -->
-                                                <img 
-                                                    v-if="product.image" 
-                                                    :src="'/uploads/products/' + product.image" 
+                                                <img
+                                                    v-if="product.image"
+                                                    :src="'/uploads/products/' + product.image"
                                                     class="w-28 h-28 object-contain mb-4 transition-transform duration-200 group-hover:scale-110"
                                                     :alt="product.name"
                                                 >
-                                                <img 
-                                                    v-else 
-                                                    src="{{ asset('uploads/products/8NKeIGlWVSCE.png') }}" 
-                                                    alt="Placeholder Image" 
+                                                <img
+                                                    v-else
+                                                    src="{{ asset('uploads/products/8NKeIGlWVSCE.png') }}"
+                                                    alt="Placeholder Image"
                                                     class="w-28 h-28 object-contain mb-4 transition-transform duration-200 group-hover:scale-110"
                                                 >
-                                                
+
                                                 <!-- Product Name -->
                                                 <p class="text-center text-base font-semibold text-gray-700 group-hover:text-blue-600 min-h-[40px]">
                                                     @{{ product.name }}
                                                 </p>
-                                                
+
                                                 <!-- Product Quantity -->
                                                 <small class="mt-2 text-xl font-semibold text-gray-500">
                                                     Prix: @{{ product.mrp }}
@@ -104,15 +104,15 @@
                         </div>
                     </div>
                 </div>
-            
+
                 <!-- Section du panier -->
                 <div class="col-span-1">
                     <form method="post" style="border: 1px solid #ddd;" class="bg-white p-6 shadow-lg rounded-lg mx-auto">
                         <!-- Sélection du client -->
                         <div class="flex items-center gap-4 mb-6">
-                            <select 
-                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200" 
-                            v-model="customer" 
+                            <select
+                            class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200"
+                            v-model="customer"
                             aria-label="Sélectionnez un client"
                             data-live-search="true"
                             >
@@ -120,32 +120,32 @@
                                 @{{ customerData.first_name + ' ' + customerData.last_name }}
                             </option>
                             </select>
-                            <button 
-                            type="button" 
-                            class="p-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-200" 
-                            data-toggle="modal" 
-                            data-target="#customerModal" 
+                            <button
+                            type="button"
+                            class="p-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-200"
+                            data-toggle="modal"
+                            data-target="#customerModal"
                             aria-label="Ajouter un client"
                             >
                             <i class="fa fa-plus"></i>
                             </button>
                         </div>
-                        
+
                         <!-- Saisie du code-barres -->
                         <div class="mb-6">
                             <div class="relative">
-                            <input 
-                                type="text" 
-                                class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200" 
-                                v-model="barcode" 
-                                @keyup.prevent="getProductByBarcode" 
-                                placeholder="Scannez votre code-barres" 
+                            <input
+                                type="text"
+                                class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200"
+                                v-model="barcode"
+                                @keyup.prevent="getProductByBarcode"
+                                placeholder="Scannez votre code-barres"
                                 aria-label="Code-barres"
                             />
                             <i class="fa fa-barcode absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                             </div>
                         </div>
-                        
+
                         <!-- Tableau des produits avec scroller -->
                         <div class="overflow-y-auto bg-gray-50 rounded-lg shadow-md mb-6" style="max-height: 300px;">
                             <table class="min-w-full divide-y divide-gray-200 text-sm">
@@ -165,18 +165,18 @@
                                         <td class="py-3 px-4">@{{ product.name }}</td>
                                         <td class="py-3 px-4 text-center">
                                             <div class="flex items-center justify-center gap-2">
-                                                <button 
-                                                type="button" 
-                                                class="px-4 py-1 bg-gray-200 rounded-lg hover:bg-gray-300" 
+                                                <button
+                                                type="button"
+                                                class="px-4 py-1 bg-gray-200 rounded-lg hover:bg-gray-300"
                                                 @click="decrementQuantity(product)"
                                                 aria-label="Diminuer la quantité"
                                                 >
                                                 -
                                                 </button>
                                                 <span class="px-4">@{{ product.sell_quantity }}</span>
-                                                <button 
-                                                type="button" 
-                                                class="px-4 py-1 bg-gray-200 rounded-lg hover:bg-gray-300" 
+                                                <button
+                                                type="button"
+                                                class="px-4 py-1 bg-gray-200 rounded-lg hover:bg-gray-300"
                                                 @click="addQuantity(product)"
                                                 aria-label="Augmenter la quantité"
                                                 >
@@ -203,12 +203,12 @@
                                     <span class="text-gray-700 font-medium">Sous-total</span>
                                     <span class="font-semibold text-gray-900 text-lg">@{{ subTotal }} CFA</span>
                                 </div>
-                        
+
                                 <!-- Enhanced Discount Input -->
                                 <div class="flex justify-between items-center">
                                     <label class="text-gray-700 font-medium text-base">Remise</label>
                                     <div class="relative w-48">
-                                        <input 
+                                        <input
                                             type="text"
                                             v-model="discount"
                                             class="w-full h-12 px-4 pr-14 text-right text-base rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -217,7 +217,7 @@
                                         <span class="absolute right-4 top-1/2 -translate-y-1/2 text-base text-gray-500">CFA</span>
                                     </div>
                                 </div>
-                        
+
                                 <!-- Total with emphasis -->
                                 <div class="pt-4 border-t border-gray-200">
                                     <div class="flex justify-between items-center text-xl font-bold">
@@ -226,7 +226,7 @@
                                     </div>
                                 </div>
                             </div>
-                        
+
                             <!-- Enhanced Payment Section -->
                             {{-- <div class="bg-white rounded-xl p-5 mb-6 border border-gray-200 shadow-sm">
                                 <div class="space-y-4">
@@ -234,7 +234,7 @@
                                     <div class="flex justify-between items-center">
                                         <label class="text-gray-700 font-medium">Montant perçu</label>
                                         <div class="relative w-60">
-                                            <input 
+                                            <input
                                                 type="text"
                                                 v-model="paid"
                                                 class="w-full h-12 px-4 pr-14 text-right rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -243,7 +243,7 @@
                                             <span class="absolute right-4 top-1/2 -translate-y-1/2 text-base text-gray-500">CFA</span>
                                         </div>
                                     </div>
-                        
+
                                     <!-- Change Amount -->
                                     <div class="flex justify-between items-center pt-3 border-t border-gray-100">
                                         <span class="text-gray-700 font-medium">Monnaie</span>
@@ -251,10 +251,10 @@
                                     </div>
                                 </div>
                             </div> --}}
-                        
+
                             <!-- Action Buttons -->
                             <div class="grid grid-cols-2 gap-4">
-                                <button 
+                                <button
                                     type="button"
                                     class="h-14 text-base bg-gray-200 text-gray-800 rounded-xl font-semibold hover:bg-gray-300 focus:ring-4 focus:ring-gray-200 transition-all disabled:opacity-50"
                                     :disabled="Object.keys(selectedProducts).length === 0"
@@ -262,12 +262,12 @@
                                 >
                                     <i class="fa fa-times mr-3"></i>Annuler
                                 </button>
-                                <button 
+                                <button
                                     type="button"
                                     class="h-14 text-base bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition-all disabled:opacity-50"
                                     :disabled="Object.keys(selectedProducts).length === 0"
-                                    data-toggle="modal" 
-                                    data-target="#paymentModal" 
+                                    data-toggle="modal"
+                                    data-target="#paymentModal"
                                     aria-label="Confirmer le paiement"
                                 >
                                     <i class="fa fa-check mr-3"></i>Payer
@@ -301,9 +301,20 @@
     <script src="/assets/js-core/lodash.js"></script>
     <script src="/assets/js-core/vue.js"></script>
     <script src="/assets/js-core/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dexie@3.2.4/dist/dexie.min.js"></script>
+
     <script>
         axios.defaults.headers.common['X-CSRF-TOKEN'] = window.Laravel.csrfToken;
         axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+
+        // Initialize Dexie Database (version 3 with barcode)
+        const db = new Dexie('pos_db_offline');
+        db.version(1).stores({
+            customers: '++id, first_name, last_name, email, phone, address, company_name, client_type',
+            products: '++id, name, mrp, quantity, category_id, barcode, image',
+            sales: '++id, customer, sells, paid, method, discount_amount, invoice_tax, created_at, synchronized',
+            unsyncedSales: '++id, customer, sells, paid, method, discount_amount, invoice_tax, created_at',
+        });
 
         var app = new Vue({
             el: '#app',
@@ -331,13 +342,18 @@
                 reference_no: '',
                 search: '',
                 loading: false,
-                isSubmitting:false,
+                isSubmitting: false,
+                isOnline: navigator.onLine,
+                searchQuery: '',
+                customerSearchQuery: '',
+                filteredProducts: [],
+                filteredCustomers: [],
             },
             computed: {
                 formattedAmount(amount) {
                     return this.formatMoney(amount) + ' CFA';
                 },
-                
+
                 changeAmount() {
                     const change = this.parseMoney(this.paid) - this.netTotal;
                     return this.formatMoney(change > 0 ? change : 0) + ' CFA';
@@ -384,6 +400,14 @@
                 },
 
             },
+            watch: {
+                searchQuery: function (newVal) {
+                    this.filterProducts();
+                },
+                customerSearchQuery: function (newVal) {
+                    this.filterCustomers();
+                },
+            },
             methods:{
                 resetSale() {
                     // Reset sale related data
@@ -421,7 +445,7 @@
                         client_type: 'retailer'
                     }
                 },
-                
+
                 postNewCustomer: function () {
                     var self = this
                     axios.post('/api/admin/customer/save', this.addCustomer)
@@ -435,29 +459,78 @@
                             console.log(JSON.stringify(response))
                         })
                 },
-                loadClients: function () {
-                    var self = this
-                    axios.get('/api/admin/client').then(function (response) {
-                        self.customers = response.data
-                    }, function (response) {
-                        console.log(response)
-                    })
+
+                loadClients: async function () {
+                    if (this.isOnline) {
+                        try {
+                            const response = await axios.get('/api/admin/client');
+                            const customers = response.data;
+                            await db.customers.clear();
+                            await db.customers.bulkAdd(customers);
+                            this.customers = customers;
+                        } catch (error) {
+                            console.error("Error loading customers from API:", error);
+                        }
+                    } else {
+                        this.customers = await db.customers.toArray();
+                    }
+                    this.filteredCustomers = this.customers; // Update filtered customers
                 },
-                loadProducts: function (data) {
+                loadProducts: async function (data) {
+                    if (this.isOnline) {
+                        await this.loadProductsFromAPI(data);
+                    } else {
+                        await this.loadProductsFromDB(data);
+                    }
+                    this.filteredProducts = this.products; // Update filtered products
+                },
+                loadProductsFromDB: async function(categoryId = null) {
+                    this.loading = true;
+                    if (categoryId === 'all' || categoryId === null) {
+                        this.products = await db.products.toArray();
+                    } else {
+                        this.products = await db.products.where('category_id').equals(parseInt(categoryId)).toArray();
+                    }
+                    this.loading = false;
+                },
+
+                loadProductsFromAPI: async function (data) {
                     var self = this
                     self.loading = true;
                     self.products = []
                     var getUrl = (data === 'all') ?
                                 '/api/admin/products' :
                                 '/api/admin/category/' + data + '/products'
-                    axios.get(getUrl)
+                    try {
+                        const response = await axios.get(getUrl);
+                        const products = response.data.map(product => ({
+                            ...product,
+                            image: product.image // le lien de l'image
+                        }));
+                        // Clear existing products in the database before adding new ones
+                        await db.products.clear();
+                        await db.products.bulkAdd(products);
+                        self.products = products;
+
+                    } catch (error) {
+                        console.error("Error loading products from API:", error);
+                    } finally {
+                        self.loading = false;
+                    }
+                },
+                getProductBySearch: function () {
+                    var self = this
+                    self.loading = true;
+                    self.products = []
+                    var searchUrl = '/api/admin/product-by-search/' + self.search
+                    axios.get(searchUrl)
                         .then(function (response) {
                             self.products = response.data
                             self.loading = false
                         })
                         .catch(function (response) {
                             console.log(JSON.stringify(response))
-                        })
+                    })
                 },
 
                 getProductBySearch: function () {
@@ -474,19 +547,33 @@
                             console.log(JSON.stringify(response))
                     })
                 },
-
-                getProductByBarcode: _.debounce(function () {
-                    var self = this
-                    axios.get('/api/admin/product-by-barcode/' + self.barcode)
-                        .then(function (response) {
+                getProductByBarcode: _.debounce(async function () {
+                    if (this.isOnline){
+                        // Check if product exists on server, if not in local DB
+                        try {
+                            const response = await axios.get('/api/admin/product-by-barcode/' + this.barcode);
                             if (response.data.found === true) {
-                                self.addToSelected(response.data.product)
-                                self.barcode = ''
+                                const serverProduct = response.data.product;
+                                await db.products.add(serverProduct); // Add to local DB
+                                this.addToSelected(serverProduct);
+                                this.barcode = '';
+                            } else {
+                                console.log('Product not found');
                             }
-                        })
-                        .catch(function (response) {
-                            console.log(JSON.stringify(response))
-                        })
+                        } catch (error) {
+                            console.error('Error fetching product from server:', error);
+                        }
+
+                    }else{
+                        // Check if product exists in local DB
+                        const product = await db.products.where('barcode').equals(this.barcode).first();
+                        if (product) {
+                            this.addToSelected(product);
+                            this.barcode = ''; // Clear barcode input
+                        }else {
+                            console.log('Product not found');
+                        }
+                    }
                 }, 300),
 
                 addToSelected: function (product, quantityToAdd = 1, fresh = false) {
@@ -505,56 +592,76 @@
                         this.$set(this.selectedProducts, product.id, product)
                     }
                 },
+
                 removeFromSelected: function (product) {
                     this.selectedProducts = _.omit(this.selectedProducts, product.id)
                 },
 
-                // Enhanced error handling
-                async postSell() {
+                postSell: async function () {
+                    // Prevent multiple submissions
+                    if (this.isSubmitting) return
+
+                    // Flag to block further submissions
+                    this.isSubmitting = true
+
+                    if(this.totalQuantity <= 0) {
+                        this.isSubmitting = false
+                        return swal("Attention", "Veuillez sélectionner un produit", "warning")
+                    }
+
+                    if(parseFloat(this.paid) < this.netTotal) {
+                        this.isSubmitting = false
+                        return swal("Attention", `Le montant perçu doit être supérieur ou égal à ${this.netTotal} CFA`, "warning")
+                    }
+
+                    const saleData = {
+                        customer: this.customer,
+                        sells: this.selectedProducts,
+                        paid: this.paid,
+                        method: this.paying_method,
+                        discount_amount: this.discountAmount,
+                        invoice_tax: this.invoiceTax,
+                        created_at: new Date(),
+                        synchronized: false, // Initially not synchronized
+                    };
 
                     try {
+                        await db.transaction('rw', db.sales, db.unsyncedSales, async () => {
+                            if (this.isOnline) {
+                            const response = await axios.post('/admin/pos/sell/save', saleData);
+                            saleData.id = response.data.id;
+                            saleData.synchronized = true;
 
-                        // Prevent multiple submissions
-                        if (this.isSubmitting) return
+                            try {
+                                await db.sales.clear();
+                                await db.sales.add(saleData); // Changé bulkAdd en add car saleData est un objet unique
+                            } catch (error) {
+                                console.error('Erreur lors de la manipulation de la base de données:', error);
+                                throw error;
+                            }
 
-                        // Flag to block further submissions
-                        this.isSubmitting = true
-
-                        if(this.totalQuantity <= 0) {
-                            return swal("Attention", "Veuillez sélectionner un produit", "warning")
+                            swal('Succès', 'Vente effectuée', 'success');
+                            window.location.href = `pos/sell/invoice/${response.data.id}`;
+                            } else {
+                            try {
+                                await db.unsyncedSales.add(saleData);
+                                await db.sales.add(saleData);
+                                swal('Succès', 'Vente enregistrée hors ligne. Sera synchronisée plus tard.', 'success');
+                                this.resetSale();
+                            } catch (error) {
+                                console.error('Erreur lors de l\'ajout hors ligne:', error);
+                                throw error;
+                            }
+                            }
+                        });
+                        } catch (error) {
+                            console.error('Error saving sale:', error);
+                            swal('Erreur', 'Un problème est survenu lors de la vente', 'error');
+                            } finally {
+                            this.isSubmitting = false;
                         }
 
-                        if(parseFloat(this.paid) < this.netTotal) {
-                            return swal("Attention", `Le montant perçu doit être supérieur ou égal à ${this.netTotal} CFA`, "warning")
-                        }
 
-                        const response = await axios.post('/admin/pos/sell/save', {
-                            customer: this.customer, 
-                            sells: this.selectedProducts, 
-                            paid: this.paid, 
-                            method: this.paying_method, 
-                            discount_amount: this.discountAmount, 
-                            invoice_tax: this.invoiceTax
-                        }).then((response) => {
-                            swal('Succès', 'Vente effectuée', 'success')
-                            window.location.href = `pos/sell/invoice/${response.data.id}`
-                        })
-                        .catch((error) => {
-                            swal('Erreur', 'Un problème est survenu lors de la vente', 'error')
-                            console.error(error)
-                        })
-                        .finally(() => {
-                            // Always reset submission flag
-                            this.isSubmitting = false
-                        })
-
-                    } catch (error) {
-                        swal('Erreur', 'Un problème est survenu lors de la vente', 'error')
-                        console.error(error)
-                    } finally {
-                        // Always reset submission flag
-                        this.isSubmitting = false
-                    }
                 },
 
                 parseMoney(value) {
@@ -577,38 +684,109 @@
                 formatMoneyInput(event) {
                     let input = event.target;
                     let value = input.value.replace(/[^\d,]/g, '');
-                    
+
                     // Gestion des virgules
                     value = value.replace(/,{2,}/g, ',');
-                    
+
                     let parts = value.split(',');
                     if (parts.length > 2) {
                         value = parts[0] + ',' + parts.slice(1).join('');
                     }
-                    
+
                     // Limite à 2 décimales
                     if (parts.length === 2) {
                         parts[1] = parts[1].slice(0, 2);
                         value = parts.join(',');
                     }
-                    
+
                     input.value = value;
-                }
+                },
+                filterProducts: function () {
+                    if (this.searchQuery === '') {
+                        this.filteredProducts = this.products; // Afficher tous les produits si la recherche est vide
+                        return;
+                    }
+
+                    const query = this.searchQuery.toLowerCase();
+                    this.filteredProducts = this.products.filter(product =>
+                        product.name.toLowerCase().includes(query)
+                    );
+                },
+                // Recherche de clients par nom
+                filterCustomers: function () {
+                    if (this.customerSearchQuery === '') {
+                        this.filteredCustomers = this.customers; // Afficher tous les clients si la recherche est vide
+                        return;
+                    }
+
+                    const query = this.customerSearchQuery.toLowerCase();
+                    this.filteredCustomers = this.customers.filter(customer =>
+                        (customer.first_name + ' ' + customer.last_name).toLowerCase().includes(query)
+                    );
+                },
+
+                handleOnlineStatus: function() {
+                    this.isOnline = navigator.onLine;
+                    if (this.isOnline) {
+                        this.syncSales();
+                    }
+                },
+
+                syncSales: async function () {
+                    const unsyncedSales = await db.unsyncedSales.toArray();
+
+                    if (unsyncedSales.length > 0) {
+                        try {
+                            const response = await axios.post('/admin/pos/sell/save', unsyncedSales);
+
+                            // Update local sales with server IDs and set 'synchronized' flag
+                            const syncedSales = response.data.map(serverSale => {
+                                const localSale = unsyncedSales.find(sale => !sale.id); // Find the corresponding local sale
+                                return {
+                                    ...localSale,
+                                    id: serverSale.id, // Use server-generated ID
+                                    synchronized: true,
+                                };
+                            });
+
+                            await db.sales.bulkPut(syncedSales); // Update local sales with server IDs
+                            await db.unsyncedSales.clear(); // Clear after successful sync
+
+                            console.log('Sales synchronized successfully:', response.data);
+
+                        } catch (error) {
+                            console.error('Error synchronizing sales:', error);
+                            // Handle errors, e.g., retry or display a message
+                        }
+                    }
+                },
 
             },
 
-            mounted: function () {
+            mounted: async function () {
                 document.getElementById("loader_page").style.display = "none";
                 document.getElementById("app").style.display = "block";
-                this.loadClients()
-                this.loadProducts('all')
 
-                // Ajouter l'écouteur d'événement pour le formatage des inputs
+                window.addEventListener('online', this.handleOnlineStatus);
+                window.addEventListener('offline', this.handleOnlineStatus);
+
+                if (this.isOnline) {
+                    await this.loadClients();
+                    await this.loadProducts('all'); // Charge depuis l'API si en ligne
+                } else {
+                    await this.loadClientsFromDB();
+                    await this.loadProductsFromDB(); // Charge depuis la base de données locale si hors ligne
+                }
+
+                this.filteredProducts = this.products; // Initialise les résultats de recherche
+                this.filteredCustomers = this.customers; // Initialise les résultats de recherche
+
                 const moneyInputs = document.querySelectorAll('.money-input');
                 moneyInputs.forEach(input => {
                     input.addEventListener('input', this.formatMoneyInput);
                 });
             }
+
         });
     </script>
 @stop
